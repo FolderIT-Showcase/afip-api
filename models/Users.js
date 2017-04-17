@@ -1,0 +1,11 @@
+var mongoose = require('mongoose'),
+  Schema = mongoose.Schema,
+  ObjectId = Schema.ObjectId;
+
+var UsersSchema = new Schema({
+  name: String,
+  username: String,
+  password: String
+});
+
+mongoose.model('Users', UsersSchema);

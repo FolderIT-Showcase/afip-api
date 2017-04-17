@@ -1,0 +1,16 @@
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">{{detailsTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body">
+    <div class="row">
+        <div class="col-md-12" ng-repeat="detail in details">
+            <div class="form-group">
+                <label for="detail">{{ detail.Id }}</label>
+                <textarea id="detail" class="form-control vresize monospace" rows="10" readonly>{{ detail.Desc | json}}</textarea>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" type="button" ng-click="$dismiss()">Cerrar</button>
+</div>

@@ -1,0 +1,33 @@
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body" dw-loading="transactions">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Transacciones</h2>
+            <table datatable="ng" dt-options="vmT.dtOptions" dt-column-defs="vmT.dtColumnDefs" class="table table-custom table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Endpoint</th>
+                        <th style="min-width:200px;">Fecha</th>
+                        <th class="not-sortable" style="min-width:250px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="transaction in transactions">
+                        <td>{{transaction.service}}</td>
+                        <td>{{transaction.endpoint}}</td>
+                        <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
+                        <td>
+                            <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)"><i class="glyphicon glyphicon-eye-open"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" type="button" ng-click="$dismiss()">Cerrar</button>
+</div>

@@ -1,0 +1,80 @@
+<!doctype html>
+
+<html ng-app="node-fe">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Facturación Electrónica</title>
+
+        <script src="bower_components/jquery/dist/jquery.js"></script>
+        <script src="bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+        <script src="bower_components/angular/angular.js"></script>
+        <script src="bower_components/angular-datatables/dist/angular-datatables.min.js"></script>
+        <script src="bower_components/angular-datatables/dist/plugins/bootstrap/angular-datatables.bootstrap.min.js"></script>
+        <script src="bower_components/angular-datatables/dist/plugins/buttons/angular-datatables.buttons.min.js"></script>
+        <script src="bower_components/datatables-buttons/js/dataTables.buttons.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.colVis.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.bootstrap4.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.flash.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.foundation.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.html5.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.jqueryui.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.semanticui.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.print.js"></script>
+        <script src="bower_components/datatables-buttons/js/buttons.bootstrap.js"></script>        
+        <script src="bower_components/angular-bootstrap/ui-bootstrap.js"></script>
+        <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <script src="bower_components/angular-route/angular-route.min.js"></script>
+        <script src="bower_components/ngstorage/ngStorage.min.js"></script>
+        <script src="bower_components/angular-animate/angular-animate.min.js"></script>
+        <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+        <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="bower_components/moment/min/moment-with-locales.min.js"></script>
+        <script src="bower_components/angular-moment/angular-moment.min.js"></script>
+        <script src="bower_components/ng-lodash/build/ng-lodash.min.js"></script>
+        <script src="bower_components/angular-toastr/dist/angular-toastr.min.js"></script>
+        <script src="bower_components/angular-toastr/dist/angular-toastr.tpls.min.js"></script>
+        <script src="bower_components/spin.js/spin.js"></script>
+        <script src="bower_components/angular-loading/angular-loading.min.js"></script>
+
+        <link rel="stylesheet" href="bower_components/angular-toastr/dist/angular-toastr.min.css">
+        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="bower_components/angular-datatables/dist/css/angular-datatables.min.css">
+        <link rel="stylesheet" href="bower_components/angular-datatables/dist/plugins/bootstrap/datatables.bootstrap.min.css">
+        <link rel="stylesheet" href="bower_components/angular-loading/angular-loading.css">
+        <link rel="stylesheet" href="assets/css/custom.css">
+
+        <script src="core.js"></script>
+    </head>
+    <body ng-controller="MainController">
+        <nav class="navbar navbar-default navbar-fixed-top" ng-controller="NavbarController">
+            <div class="container fill">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed" aria-expanded="true">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand">Facturación Electrónica</a>
+                </div>
+                <div class="navbar-collapse collapse in" collapse="isCollapsed" aria-expanded="true">
+                    <div ng-if="loggedIn">
+                        <ul class="nav navbar-nav">
+                            <li><a href="#/dashboard">Dashboard</a></li>
+                            <li><a href="#/reportes">Reportes</a></li>
+                        </ul>
+
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a href="" ng-click="logout()">Salir</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container" id="main" ng-view>
+        </div>
+    </body>
+</html>

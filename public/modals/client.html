@@ -1,0 +1,59 @@
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body" dw-loading="client">
+    <form name="clientForm">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="name">Nombre</label>
+                    <input type="text" id="name" class="form-control" placeholder="Nombre" required="" autofocus="" ng-model="client.name">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="cuit">CUIT</label>
+                    <input type="text" id="code" class="form-control" placeholder="CUIT" required="" autofocus="" ng-model="client.cuit">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="type">Tipo de Certificación</label>
+                    <select ng-options="type.Id as type.Desc for type in CertTipo" id="type" class="form-control" required="" autofocus="" ng-model="client.type">
+                        <option value="" disabled selected>-- Seleccione --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="code">Código</label>
+                    <input type="text" id="code" class="form-control" placeholder="Código" required="" autofocus="" ng-model="client.code">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="signer">Certificado</label>
+                    <textarea id="signer" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.signer"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="key">Key</label>
+                    <textarea id="key" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.key"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="csr">CSR</label>
+                    <textarea id="csr" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.csr"></textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <button class="btn btn-primary" type="submit" ng-disabled="clientForm.$invalid" ng-click="$close(client)">OK</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
+</div>

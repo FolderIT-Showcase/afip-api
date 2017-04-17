@@ -1,0 +1,57 @@
+body {
+    min-height: 75rem;
+    padding-top: 5rem;
+    background-color: gainsboro;
+}
+
+#main {
+    min-height: calc(100vh - 5rem);
+    background-color: white;
+}
+
+.dt-buttons {
+    float: right;
+    margin-right: 10px;
+}
+
+.dt-buttons .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.monospace {
+    font-family: monospace;
+}
+
+.vresize {
+    resize: vertical;
+}
+
+.hresize {
+    resize: horizontal;
+}
+
+@media (min-width: 1280px) {
+    .modal-xl {
+        width: 1200px;
+    }
+}
+
+div.dataTables_info {
+    float: left;
+}
+
+.table-custom td, .table-custom th {
+    padding: 5px !important;
+}
+
+.table-custom .btn {
+    padding: 4px 14px !important;
+    font-size: 14px !important;
+}
+
+.dataTables_wrapper select {
+    border: 1px solid #ccc !important;
+}
