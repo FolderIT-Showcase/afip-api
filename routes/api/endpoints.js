@@ -24,7 +24,7 @@ class Endpoints {
 		//Verificacion de token o username+password
 		app.use(this.authenticate.bind(this));
 
-		app.get('/api/:service/describe', this.describe.bind(this));
+		app.post('/api/:service/describe', this.describe.bind(this));
 
 		app.get('/api/getClients', this.getClients.bind(this));
 
@@ -50,15 +50,13 @@ class Endpoints {
 
 		app.post('/api/generarCae', this.generar_cae.bind(this));
 
-		this.clients = {
-			"PROD": {},
-			"HOMO": {}
-		};
+
+		this.clients = {};
 	}
 
 	generar_cae(req, res) {
 		var code = req.body.code;
-		// var type = req.body.type;
+		var version = "v1";
 		var service = "wsfev1";
 		var endpoint = "FECAESolicitar";
 
@@ -120,6 +118,7 @@ class Endpoints {
 
 		this.afip({
 			code: code,
+			version: version,
 			service: service,
 			endpoint: endpoint,
 			params: params
@@ -213,7 +212,7 @@ class Endpoints {
 
 	lastCbte(req, res) {
 		var code = req.body.code;
-		// var type = req.body.type;
+		var version = "v1";
 		var service = "wsfev1";
 		var endpoint = "FECompUltimoAutorizado";
 
@@ -224,7 +223,7 @@ class Endpoints {
 
 		this.afip({
 			code: code,
-			// type: type,
+			version: version,
 			service: service,
 			endpoint: endpoint,
 			params: params
@@ -273,16 +272,31 @@ class Endpoints {
 		});
 	}
 
-	createClientForService(type, service) {
+	createClientForService(type, version, service, endpoint) {
+		// Parsear servicios
+		if (service == 'ws_sr_padron_a10') service = 'sr-padron';
+		if (service == 'ws_sr_padron_a5') service = 'sr-padron';
+		if (service == 'ws_sr_padron_a3') service = 'sr-padron';
+
 		return new Promise((resolve, reject) => {
-			if (this.clients[type][service]) {
-				resolve(this.clients[type][service]);
+			if (this.clients[type] && this.clients[type][version] && this.clients[type][version][service]) {
+				resolve(this.clients[type][version][service]);
 			} else {
-				soap.createClient(AfipURLs.getService(type, service), (err, client) => {
+				var wsdl = path.join(global.appRoot, 'wsdl', service + '.xml');
+
+				if (!fs.existsSync(wsdl)) {
+					wsdl = AfipURLs.getService(type, version, service, endpoint);
+				}
+
+				soap.createClient(wsdl, (err, client) => {
 					if (err && !client) {
+						logger.error(err);
 						reject(err);
 					} else {
-						this.clients[type][service] = client;
+						if (!this.clients[type]) this.clients[type] = {};
+						if (!this.clients[type][version]) this.clients[type][version] = {};
+
+						this.clients[type][version][service] = client;
 
 						resolve(client);
 					}
@@ -314,20 +328,29 @@ class Endpoints {
 	}
 
 	recreate_token(req, res) {
-		var code = req.params.code;
-		var service = req.params.service;
+		var code = req.body.code;
+		var service = req.body.service;
 
-		WSAA.generateToken(code, service)
-			.then((tokens) => res.json({
-				result: true,
-				data: tokens
-			}))
-			.catch((err) => {
-				res.json({
-					result: false,
-					err: err.message
+		this.validate_client(code).then((client) => {
+			var type = client.type;
+
+			WSAA.generateToken(code, type, service)
+				.then((tokens) => res.json({
+					result: true,
+					data: tokens
+				}))
+				.catch((err) => {
+					res.json({
+						result: false,
+						err: err.message
+					});
 				});
+		}).catch((err) => {
+			res.json({
+				result: false,
+				err: err.message
 			});
+		});
 	}
 
 	afip(request) {
@@ -336,19 +359,29 @@ class Endpoints {
 			var service = request.service;
 			var endpoint = request.endpoint;
 			var params = request.params;
+			var version = request.version;
 
 			this.validate_client(code).then((client) => {
 				var type = client.type;
 
 				WSAA.generateToken(code, type, service).then((tokens) => {
-					this.createClientForService(type, service).then((soapClient) => {
-						var afipRequest = {
-							Auth: {
+					this.createClientForService(type, version, service, endpoint).then((soapClient) => {
+						var afipRequest = {}
+
+						// Parsear versión de WSFE
+						if (version == 'v1') {
+							afipRequest.Auth = {
 								Token: tokens.token,
 								Sign: tokens.sign,
 								Cuit: client.cuit
-							}
-						};
+							};
+						}
+
+						if (version == 'v2') {
+							afipRequest.token = tokens.token;
+							afipRequest.sign = tokens.sign;
+							afipRequest.cuitRepresentada = client.cuit;
+						}
 
 						afipRequest = _.merge(afipRequest, params);
 
@@ -363,7 +396,15 @@ class Endpoints {
 							});
 
 							try {
-								resolve(result[`${endpoint}Result`]);
+								logger.debug(result);
+
+								if (version == 'v1') {
+									resolve(result[`${endpoint}Result`]);
+								}
+
+								if (version == 'v2') {
+									resolve(result.toJSON());
+								}
 							} catch (err) {
 								logger.error(err);
 								reject({
@@ -371,18 +412,20 @@ class Endpoints {
 								});
 							}
 						});
-					}).catch(err => {
+					}).catch((err) => {
 						logger.error(err);
 						reject({
 							message: "Ocurrió un error al intentar conectarse a los servicios web de AFIP."
 						});
 					});
 				}).catch((err) => {
+					logger.error(err);
 					reject({
 						message: err.message
 					});
 				});
 			}).catch((err) => {
+				logger.error(err);
 				reject({
 					message: err.message
 				});
@@ -392,7 +435,7 @@ class Endpoints {
 
 	endpoint(req, res) {
 		var code = req.body.code;
-		// var type = req.body.type;
+		var version = req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint;
 		var params = req.body.params;
@@ -401,7 +444,7 @@ class Endpoints {
 			var type = client.type;
 
 			WSAA.generateToken(code, type, service).then((tokens) => {
-				this.createClientForService(type, service).then((soapClient) => {
+				this.createClientForService(type, version, service, endpoint).then((soapClient) => {
 					var afipRequest = {
 						Auth: {
 							Token: tokens.token,
@@ -433,12 +476,14 @@ class Endpoints {
 					res.json({ result: false, err: "Ocurrió un error al intentar conectarse a los servicios web de AFIP." });
 				});
 			}).catch((err) => {
+				logger.error(err)
 				res.json({
 					result: false,
 					err: err.message
 				});
 			});
 		}).catch((err) => {
+			logger.error(err)
 			res.json({
 				result: false,
 				err: err.message
@@ -447,17 +492,25 @@ class Endpoints {
 	}
 
 	describe(req, res) {
+		var code = req.body.code || "";
+		var version = req.body.version || "v1";
 		var service = req.params.service;
+		var endpoint = req.params.endpoint || "";
+		var params = req.body.params || {};
 
-		WSAA.generateToken(service).then((tokens) => {
-			this.createClientForService(service).then((client) => {
-				res.json(client.describe());
-			});
+		this.validate_client(code).then((client) => {
+			var type = client.type;
 
-		}).catch((err) => {
-			res.json({
-				result: false,
-				err: err.message
+			WSAA.generateToken(code, type, service).then((tokens) => {
+				this.createClientForService(type, version, service, endpoint).then((client) => {
+					res.json(client.describe());
+				});
+
+			}).catch((err) => {
+				res.json({
+					result: false,
+					err: err.message
+				});
 			});
 		});
 	}
