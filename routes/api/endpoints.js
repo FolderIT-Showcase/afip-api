@@ -2,6 +2,7 @@
 
 var _ = require('lodash'),
 	soap = require('strong-soap').soap,
+	request = require('request'),
 	WSAA = require('../../helpers/wsaa'),
 	AfipURLs = require('../../helpers/urls'),
 	mongoose = require('mongoose'),
@@ -17,6 +18,8 @@ class Endpoints {
 	constructor(app) {
 		//Autenticacion
 		app.post('/api/login', this.login.bind(this));
+
+		app.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
 
 		//Verificacion de token o username+password
 		app.use(this.authenticate.bind(this));
@@ -162,6 +165,50 @@ class Endpoints {
 				err: err.message
 			});
 		});
+	}
+
+	consultar_cuit(req, res) {
+		var cuit = req.params.cuit;
+
+		request('https://soa.afip.gob.ar/sr-padron/v2/persona/' + String(cuit), function (err, response, body) {
+			if (!err && response.statusCode == 200) {
+				res.json({
+					result: true,
+					data: JSON.parse(body).data
+				});
+			} else {
+				res.json({
+					result: false,
+					err: err
+				});
+			}
+		});
+
+		// var code = req.body.code;
+		// var cuit = req.body.cuit;
+		// var version = "v2";
+		// var service = "ws_sr_padron_a10";
+		// var endpoint = "getPersona";
+
+		// var params = {
+		// 	idPersona: cuit
+		// };
+
+		// this.afip({
+		// 	code: code,
+		// 	version: version,
+		// 	service: service,
+		// 	endpoint: endpoint,
+		// 	params: params
+		// }).then((result) => {
+		// 	res.json(result);
+		// }).catch((err) => {
+		// 	logger.error(err);
+		// 	res.json({
+		// 		result: false,
+		// 		err: err.message
+		// 	});
+		// });
 	}
 
 	lastCbte(req, res) {
