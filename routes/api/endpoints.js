@@ -65,10 +65,10 @@ class Endpoints {
 		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace('.', '').replace(',', '.'));
 		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace('.', '').replace(',', '.'));
 		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace('.', '').replace(',', '.'));
-		var impTotal = impNeto + impConc + impExento + impTrib + impIVA;
+		var impTotal = parseFloat((impNeto + impConc + impExento + impTrib + impIVA).toFixed(2));
 
 		var idIVA = 3; //0%
-		var porcIVA = parseFloat(impIVA / impNeto * 100);
+		var porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
 
 		//Tolerancia de 0.1 decimales
 		if (porcIVA == 0) idIVA = 3;
