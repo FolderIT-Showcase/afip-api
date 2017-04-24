@@ -171,10 +171,17 @@ class Endpoints {
 
 		request('https://soa.afip.gob.ar/sr-padron/v2/persona/' + String(cuit), function (err, response, body) {
 			if (!err && response.statusCode == 200) {
-				res.json({
-					result: true,
-					data: JSON.parse(body).data
-				});
+				if (JSON.parse(body).data) {
+					res.json({
+						result: true,
+						data: JSON.parse(body).data
+					});
+				} else {
+					res.json({
+						result: false,
+						err: "CUIT no encontrado"
+					});
+				}
 			} else {
 				res.json({
 					result: false,
