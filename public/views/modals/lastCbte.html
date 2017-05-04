@@ -13,12 +13,10 @@
             <div class="col-md-8">
                 <div class="form-group">
                     <label for="cbtetipo">Tipo de Comprobante</label>
-<!--
-                    <select ng-options="type.Id as type.Desc for type in CbteTipo" id="cbtetipo" class="form-control" required="" autofocus="" ng-model="formData.CbteTipo">
-                        <option value="">-- Seleccione --</option>
-                    </select>
--->
-                    <input type="text" ng-model="formData.CbteTipo" uib-typeahead="type as type.Desc for type in CbteTipo | filter:$viewValue | limitTo:8" typeahead-show-hint="true" typeahead-min-length="0" class="form-control">
+                    <input type="text" class="form-control" ng-model="formData.CbteTipo" uib-typeahead="type.Id as type.Desc for type in CbteTipo | filter:$viewValue | limitTo:8"
+                           typeahead-show-hint="true"
+                           typeahead-min-length="0"
+                           typeahead-editable="false">
                 </div>
             </div>
             <div class="col-md-6">

@@ -7,13 +7,15 @@
             <table datatable="ng" dt-options="vmP.dtOptions" dt-column-defs="vmP.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Código de Cliente</th>
+                        <th>Cliente</th>
+                        <th class="fit">Código</th>
                         <th class="fit">Activo</th>
                         <th class="not-sortable" style="width:120px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="permit in permissions">
+                        <td>{{formatClient(permit.code)}}</td>
                         <td>{{permit.code}}</td>
                         <td><div class="checkbox checkbox-primary"><input disabled type="checkbox" ng-model="permit.active"><label></label></div></td>
                         <td>

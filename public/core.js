@@ -515,7 +515,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             size: 'lg',
             scope: $scope
         });
-        
+
         modalInstance.result.then(function() {
         }, function() {
         });
@@ -597,7 +597,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             scope: $scope,
             templateUrl: 'views/modals/lastCbte.html'
         });
-        
+
         modalInstance.result.then(function() {   
         }, function() {
         });
@@ -652,6 +652,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
 app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'TEXT_ERRORS', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, TEXT_ERRORS) {
     $scope.permissions = [];
+    $scope.clients = angular.copy($scope.$parent.clients);
     $scope.user = angular.copy($scope.$parent.user);
 
     $scope.vmP = {
@@ -679,6 +680,14 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
         dtColumnDefs: [
             DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
         ]
+    };
+
+    $scope.formatClient = function(code) {
+        for (var i=0; i < $scope.clients.length; i++) {
+            if (code === $scope.clients[i].code) {
+                return $scope.clients[i].name;
+            }
+        }
     };
 
     $scope.newPermit = function(permit) {

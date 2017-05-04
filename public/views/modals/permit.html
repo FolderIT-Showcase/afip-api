@@ -4,10 +4,21 @@
     </div>
     <div class="modal-body" id="modal-body" dw-loading="user">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-8">
                 <div class="form-group">
                     <label for="code">Cliente</label>
-                    <input type="text" id="code" class="form-control" placeholder="Código de cliente" required="" autofocus="" ng-model="permit.code">
+                    <input type="text" ng-model="permit.code" class="form-control"
+                           uib-typeahead="client.code as client.name for client in clients | filter:$viewValue | limitTo:8"
+                           typeahead-show-hint="true"
+                           typeahead-min-length="0"
+                           typeahead-editable="false" 
+                           typeahead-input-formatter="formatClient($model)">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="clientcode">Código</label>
+                    <input disabled type="text" id="clientcode" class="form-control" placeholder="Código de cliente" required="" autofocus="" ng-model="permit.code">
                 </div>
             </div>
             <div class="col-md-12">
