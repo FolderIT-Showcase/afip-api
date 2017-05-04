@@ -157,14 +157,14 @@ class Endpoints {
 		var service = "wsfev1";
 		var endpoint = "FECAESolicitar";
 
-		var impNeto = parseFloat(req.body.ImpNeto.replace(' ', '').replace('.', '').replace(',', '.'));
-		var impConc = parseFloat(req.body.ImpConc.replace(' ', '').replace('.', '').replace(',', '.'));
-		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace('.', '').replace(',', '.'));
-		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace('.', '').replace(',', '.'));
-		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace('.', '').replace(',', '.'));
+		var impNeto = parseFloat(req.body.ImpNeto.replace(' ', '').replace(',', ''));
+		var impConc = parseFloat(req.body.ImpConc.replace(' ', '').replace(',', ''));
+		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace(',', ''));
+		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace(',', ''));
+		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace(',', ''));
 		var impTotal = parseFloat((impNeto + impConc + impExento + impTrib + impIVA).toFixed(2));
 
-		var idIVA = 3; //0%
+		var idIVA = req.body.IdIVA || null;
 		var porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
 
 		//Tolerancia de 0.1 decimales
@@ -174,6 +174,15 @@ class Endpoints {
 		if (porcIVA >= 10.4 && porcIVA <= 10.6) idIVA = 4;
 		if (porcIVA >= 20.9 && porcIVA <= 21.1) idIVA = 5;
 		if (porcIVA >= 26.9 && porcIVA <= 27.1) idIVA = 6;
+		}
+
+		if (!idIVA) {
+			res.json({
+				result: false,
+				err: "El importe de IVA no se corresponde a ningún porcentaje de IVA ofrecido por AFIP: " + porcIVA
+			});
+			return;
+		}
 
 		var params = {
 			"FeCAEReq": {
@@ -211,9 +220,10 @@ class Endpoints {
 					}]
 				}
 			}
-		};
+		}
 
 		this.afip({
+			username: req.decoded ? req.decoded._doc.username : "",
 			code: code,
 			version: version,
 			service: service,
@@ -227,7 +237,7 @@ class Endpoints {
 				data: {
 					CAE: response.CAE,
 					CAEFchVto: response.CAEFchVto,
-					CbteFch: response.CbteFch//moment().format("YYYYMMDD")
+					CbteFch: response.CbteFch
 				}
 			};
 
@@ -236,8 +246,8 @@ class Endpoints {
 
 				var errs = '';
 				var obs = [];
-				if (response.Observaciones && response.Observaciones.obs) {
-					obs.concat(response.Observaciones.Obs);
+				if (response.Observaciones && response.Observaciones.Obs) {
+					obs = obs.concat(response.Observaciones.Obs);
 				} else if (result.Errors) {
 					obs.push(result.Errors.Err);
 				}
@@ -286,32 +296,6 @@ class Endpoints {
 				});
 			}
 		});
-
-		// var code = req.body.code;
-		// var cuit = req.body.cuit;
-		// var version = "v2";
-		// var service = "ws_sr_padron_a10";
-		// var endpoint = "getPersona";
-
-		// var params = {
-		// 	idPersona: cuit
-		// };
-
-		// this.afip({
-		// 	code: code,
-		// 	version: version,
-		// 	service: service,
-		// 	endpoint: endpoint,
-		// 	params: params
-		// }).then((result) => {
-		// 	res.json(result);
-		// }).catch((err) => {
-		// 	logger.error(err);
-		// 	res.json({
-		// 		result: false,
-		// 		err: err.message
-		// 	});
-		// });
 	}
 
 	lastCbte(req, res) {
@@ -326,6 +310,7 @@ class Endpoints {
 		};
 
 		this.afip({
+			username: req.decoded ? req.decoded._doc.username : "",
 			code: code,
 			version: version,
 			service: service,
@@ -384,7 +369,7 @@ class Endpoints {
 
 			Clients.findOne({
 				code: code
-			}).then(function (client) {
+			}).then((client) => {
 				if (!client) {
 					reject({
 						result: false,
@@ -392,6 +377,29 @@ class Endpoints {
 					});
 				} else {
 					resolve(client);
+				}
+			}, (err) => {
+				reject(err);
+			});
+		});
+	}
+
+	validate_username(username, code) {
+		return new Promise((resolve, reject) => {
+			var UserPermissions = mongoose.model('UserPermissions');
+
+			UserPermissions.findOne({
+				username: username,
+				code: code,
+				active: true
+			}).then((permit) => {
+				if (!permit) {
+					reject({
+						result: false,
+						message: "El usuario no tiene permisos sobre el cliente solicitado. Contáctese con el Administrador del servicio de Facturación Electrónica."
+					});
+				} else {
+					resolve(permit);
 				}
 			}, (err) => {
 				reject(err);
@@ -482,18 +490,26 @@ class Endpoints {
 	}
 
 	afip(request) {
-		return new Promise((resolve, reject) => {
 			var code = request.code;
 			var service = request.service;
 			var endpoint = request.endpoint;
 			var params = request.params;
 			var version = request.version;
+		var username = request.username;
+		var tokens, type, client;
 
-			this.validate_client(code).then((client) => {
-				var type = client.type;
+		return new Promise((resolve, reject) => {
+			this.validate_username(username, code).then(() => {
+				return this.validate_client(code);
+			}).then((validatedClient) => {
+				client = validatedClient;
+				type = client.type;
 
-				WSAA.generateToken(code, type, service).then((tokens) => {
-					this.createClientForService(type, version, service, endpoint).then((soapClient) => {
+				return WSAA.generateToken(code, type, service);
+			}).then((newTokens) => {
+				tokens = newTokens;
+				return this.createClientForService(type, version, service, endpoint);
+			}).then((soapClient) => {
 						var afipRequest = {}
 
 						// Parsear versión de WSFE
@@ -515,6 +531,7 @@ class Endpoints {
 
 						soapClient[endpoint](afipRequest, (err, result) => {
 							this.generateTransaction({
+						username: username,
 								code: code,
 								type: type,
 								service: service,
@@ -536,25 +553,13 @@ class Endpoints {
 							} catch (err) {
 								logger.error(err);
 								reject({
-									message: "Ocurrió un error al intentar interpretar la respuesta a la solicitud"
+							message: "Ocurrió un error al intentar interpretar la respuesta a la solicitud."
 								});
 							}
 						});
 					}).catch((err) => {
 						logger.error(err);
 						reject({
-							message: "Ocurrió un error al intentar conectarse a los servicios web de AFIP."
-						});
-					});
-				}).catch((err) => {
-					logger.error(err);
-					reject({
-						message: err.message
-					});
-				});
-			}).catch((err) => {
-				logger.error(err);
-				reject({
 					message: err.message
 				});
 			});
@@ -567,12 +572,18 @@ class Endpoints {
 		var service = req.params.service;
 		var endpoint = req.params.endpoint;
 		var params = req.body.params;
+		var client, type, tokens;
 
-		this.validate_client(code).then((client) => {
-			var type = client.type;
+		this.validate_client(code).then((validatedClient) => {
+			client = validatedClient;
+			type = client.type;
 
-			WSAA.generateToken(code, type, service).then((tokens) => {
-				this.createClientForService(type, version, service, endpoint).then((soapClient) => {
+			return WSAA.generateToken(code, type, service);
+		}).then((newTokens) => {
+			tokens = newTokens;
+
+			return this.createClientForService(type, version, service, endpoint);
+		}).then((soapClient) => {
 					var afipRequest = {
 						Auth: {
 							Token: tokens.token,
@@ -583,8 +594,17 @@ class Endpoints {
 
 					afipRequest = _.merge(afipRequest, params);
 
+			if (typeof (soapClient[endpoint]) !== 'function') {
+				res.json({
+					result: false,
+					err: "El endpoint solicitado no existe para el servicio: " + endpoint
+				});
+				return;
+			}
+
 					soapClient[endpoint](afipRequest, (err, result) => {
 						this.generateTransaction({
+					username: req.decoded ? req.decoded._doc.username : "",
 							code: code,
 							type: type,
 							service: service,
@@ -599,17 +619,6 @@ class Endpoints {
 							res.json(result);
 						}
 					});
-				}).catch(err => {
-					logger.error(err);
-					res.json({ result: false, err: "Ocurrió un error al intentar conectarse a los servicios web de AFIP." });
-				});
-			}).catch((err) => {
-				logger.error(err)
-				res.json({
-					result: false,
-					err: err.message
-				});
-			});
 		}).catch((err) => {
 			logger.error(err)
 			res.json({
