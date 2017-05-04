@@ -15,6 +15,7 @@
     "openssl-wrapper": "^0.3.4",
     "serve-favicon": "^2.4.2",
     "strong-soap": "^1.2.3",
+    "toobusy-js": "^0.5.1",
     "tracer": "^0.8.7",
     "xml": "^1.0.1",
     "xml2js": "^0.4.16"
