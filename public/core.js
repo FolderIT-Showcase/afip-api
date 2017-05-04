@@ -15,9 +15,9 @@ var app = angular.module('node-fe', [
     'datatables.buttons'
 ]);
 
-app.service('TEXT_ERRORS', function() {
+app.service('TEXT_ERRORS', [function() {
     this.ERR_API_CONNECTION = "Error de conexión a la API";
-});
+}]);
 
 app.run(['$rootScope', '$http', '$localStorage', '$loading', function($rootScope, $http, $localStorage, $loading) {
     $loading.setDefaultOptions({
@@ -63,116 +63,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         Id: "HOMO",
         Desc: "Homologación"
     }];
-    $scope.CbteTipo = [
-        {
-            "Id": 1,
-            "Desc": "Factura A"
-        },
-        {
-            "Id": 2,
-            "Desc": "Nota de Débito A"
-        },
-        {
-            "Id": 3,
-            "Desc": "Nota de Crédito A"
-        },
-        {
-            "Id": 6,
-            "Desc": "Factura B"
-        },
-        {
-            "Id": 7,
-            "Desc": "Nota de Débito B"
-        },
-        {
-            "Id": 8,
-            "Desc": "Nota de Crédito B"
-        },
-        {
-            "Id": 4,
-            "Desc": "Recibos A"
-        },
-        {
-            "Id": 5,
-            "Desc": "Notas de Venta al contado A"
-        },
-        {
-            "Id": 9,
-            "Desc": "Recibos B"
-        },
-        {
-            "Id": 10,
-            "Desc": "Notas de Venta al contado B"
-        },
-        {
-            "Id": 63,
-            "Desc": "Liquidacion A"
-        },
-        {
-            "Id": 64,
-            "Desc": "Liquidacion B"
-        },
-        {
-            "Id": 34,
-            "Desc": "Cbtes. A del Anexo I, Apartado A,inc.f),R.G.Nro. 1415"
-        },
-        {
-            "Id": 35,
-            "Desc": "Cbtes. B del Anexo I,Apartado A,inc. f),R.G. Nro. 1415"
-        },
-        {
-            "Id": 39,
-            "Desc": "Otros comprobantes A que cumplan con R.G.Nro. 1415"
-        },
-        {
-            "Id": 40,
-            "Desc": "Otros comprobantes B que cumplan con R.G.Nro. 1415"
-        },
-        {
-            "Id": 60,
-            "Desc": "Cta de Vta y Liquido prod. A"
-        },
-        {
-            "Id": 61,
-            "Desc": "Cta de Vta y Liquido prod. B"
-        },
-        {
-            "Id": 11,
-            "Desc": "Factura C"
-        },
-        {
-            "Id": 12,
-            "Desc": "Nota de Débito C"
-        },
-        {
-            "Id": 13,
-            "Desc": "Nota de Crédito C"
-        },
-        {
-            "Id": 15,
-            "Desc": "Recibo C"
-        },
-        {
-            "Id": 49,
-            "Desc": "Comprobante de Compra de Bienes Usados a Consumidor Final"
-        },
-        {
-            "Id": 51,
-            "Desc": "Factura M"
-        },
-        {
-            "Id": 52,
-            "Desc": "Nota de Débito M"
-        },
-        {
-            "Id": 53,
-            "Desc": "Nota de Crédito M"
-        },
-        {
-            "Id": 54,
-            "Desc": "Recibo M"
-        }
-    ];
+    $scope.CbteTipo = [];
 
     $scope.vmC = {
         dtOptions: DTOptionsBuilder.newOptions()
@@ -261,11 +152,13 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             if(res.data.result) {
                 $scope.clients = res.data.data;
             } else {
+                $scope.clients = [];
                 toastr.error(res.data.err);
             }
 
             if(callback) callback();
         }, function(res) {
+            $scope.clients = [];
             $loading.finish('clients');
             toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
 
@@ -283,11 +176,13 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             if(res.data.result) {
                 $scope.users = res.data.data;
             } else {
+                $scope.users = [];
                 toastr.error(res.data.err);
             }
 
             if(callback) callback();
         }, function(res) {
+            $scope.users = [];
             $loading.finish('users');
             toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
 
@@ -303,14 +198,19 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
     reload();
 
-    $scope.getTransactions = function(client, callback) {
+    $scope.getTransactions = function(client) {
         $loading.start('transactions');
 
-        $http.get('/api/transactions/' + client.code)
-            .then(function(res) {
-            $loading.finish('transactions');
-
+        $http.get('/api/cbteTipo/' + client.code).then(function(res) {
             if(res.data.result) {
+                $scope.CbteTipo = res.data.data;
+                return $http.get('/api/transactions/' + client.code);
+            } else {
+                $loading.finish('transactions');
+                toastr.error(res.data.err);
+            }
+        }).then(function(res) {
+            if (res.data.result) {
                 $scope.transactions = res.data.data;
 
                 //Resaltar los datos más importantes
@@ -328,7 +228,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                         e.ptoVta = cab.PtoVta;
                         e.cbteTipo = cab.CbteTipo;
                     }
-                    
+
                     //WSFEX
                     if (response.FEXAuthorizeResult && response.FEXAuthorizeResult.FEXResultAuth) {
                         var cab = response.FEXAuthorizeResult.FEXResultAuth;
@@ -338,32 +238,48 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                         e.cae = cab.Cae;
                         e.cbteNro = cab.Cbte_nro;
                     }
-                });
 
-                $scope.modalTitle = "Transacciones del Cliente: " + client.code;
+                    //Descripción del tipo de comprobante
+                    if (e.cbteTipo) {
+                        var cbte = e.cbteDesc = _.find($scope.CbteTipo, function(t) {
+                            return t.Id === e.cbteTipo;
+                        });
+
+                        if (cbte) {
+                            e.cbteDesc = cbte.Desc;
+                        } else {
+                            e.cbteDesc = "N/A";
+                        }
+                    }
+                });
             } else {
                 toastr.error(res.data.err);
             }
-
-            if (callback) callback();
-        }, function(res) {
+            $loading.finish('transactions');
+        }).catch(function(res) {
             $loading.finish('transactions');
             toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
-
-            if (callback) callback();
         });
     }
 
     $scope.viewTransactions = function(client) {
         $scope.client = client;
+        $scope.modalTitle = "Transacciones del Cliente: " + client.code;
+        $scope.transactions = [];
 
-        $scope.getTransactions(client, function() {
-            var modalInstance = $uibModal.open({
-                backdrop: 'static',
-                scope: $scope,
-                size: 'lg',
-                templateUrl: 'modals/transactions.html'
-            });
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            size: 'lg',
+            templateUrl: 'views/modals/transactions.html'
+        });
+
+        modalInstance.result.then(function() {
+        }, function() {
+        });
+
+        modalInstance.rendered.then(function() {
+            $scope.getTransactions(client);
         });
     }
 
@@ -381,7 +297,11 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/details.html'
+            templateUrl: 'views/modals/details.html'
+        });
+
+        modalInstance.result.then(function() {
+        }, function() {
         });
     }
 
@@ -392,7 +312,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/user.html'
+            templateUrl: 'views/modals/user.html'
         });
 
         modalInstance.result.then(function (newUser) {
@@ -427,7 +347,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             backdrop: 'static',
             scope: $scope,
             size: 'lg',
-            templateUrl: 'modals/client.html'
+            templateUrl: 'views/modals/client.html'
         });
 
         modalInstance.result.then(function (newClient) {
@@ -477,6 +397,41 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         });
     }
 
+    $scope.editUser = function(user) {
+        $scope.user = angular.copy(user);
+        $scope.modalTitle = "Editar Usuario: " + user.name
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/user.html'
+        });
+
+        modalInstance.result.then(function (editedUser) {
+            $scope.user = angular.copy(editedUser);
+            $loading.start('users');
+
+            $http.post('/api/editUser', $scope.user)
+                .then(function(res) {
+                $loading.finish('users');
+
+                if (res.data.result) {
+                    $scope.user = res.data.data;
+                    var i = _.findIndex($scope.users, { _id: $scope.user._id });
+                    if(i >= 0) $scope.users[i] = angular.copy($scope.user);
+                    toastr.success("Usuario editado con éxito");
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('users');
+                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            })
+        }, function () {
+            toastr.info("Edición de usuario cancelada");
+        });
+    };
+
     $scope.editClient = function(client) {
         $scope.client = angular.copy(client);
         $scope.modalTitle = "Editar Cliente: " + client.name
@@ -485,7 +440,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             backdrop: 'static',
             scope: $scope,
             size: 'lg',
-            templateUrl: 'modals/client.html'
+            templateUrl: 'views/modals/client.html'
         });
 
         modalInstance.result.then(function (editedClient) {
@@ -512,7 +467,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             toastr.info("Edición de cliente cancelada");
         });
     };
-    
+
     $scope.resetPassword = function(user) {
         $scope.user = angular.copy(user);
         $scope.modalTitle = "Restablecer Contraseña: " + user.name
@@ -520,7 +475,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/resetPassword.html'
+            templateUrl: 'views/modals/resetPassword.html'
         });
 
         modalInstance.result.then(function (editedUser) {
@@ -548,11 +503,29 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         });
     };
 
+    $scope.userPermissions = function(user) {
+        $scope.user = angular.copy(user);
+        $scope.modalTitle = "Permisos de Usuario: " + user.name
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/userPermissions.html',
+            controller: 'UserPermissionsController',
+            size: 'lg',
+            scope: $scope
+        });
+        
+        modalInstance.result.then(function() {
+        }, function() {
+        });
+    };
+
     $scope.removeClient = function(client) {
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/confirm.html'
+            templateUrl: 'views/modals/confirm.html'
         });
 
         modalInstance.result.then(function () {
@@ -583,7 +556,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/confirm.html'
+            templateUrl: 'views/modals/confirm.html'
         });
 
         modalInstance.result.then(function () {
@@ -622,15 +595,30 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            templateUrl: 'modals/lastCbte.html'
+            templateUrl: 'views/modals/lastCbte.html'
+        });
+        
+        modalInstance.result.then(function() {   
+        }, function() {
+        });
+
+        modalInstance.rendered.then(function() {
+            $loading.start('lastCbte');
+            $http.get('/api/cbteTipo/' + client.code).then(function(res) {
+                $loading.finish('lastCbte');
+                if(res.data.result) {
+                    $scope.CbteTipo = res.data.data;
+                } else {
+                    toastr.error(res.data.err);
+                }
+            });
         });
     }
 
     $scope.lastCbteGet = function(formData) {
         $loading.start('lastCbte');
 
-        $http.post('/api/lastCbte', formData)
-            .then(function(res) {
+        $http.post('/api/lastCbte', formData).then(function(res) {
             $loading.finish('lastCbte');
 
             if (res.data.result) {
@@ -653,9 +641,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
                 toastr.error(errs);
             }
-        }, function(res) {
-            console.log(res);
-
+        }).catch(function(res) {
             $scope.responseCollapsed = true;
             $scope.response = undefined;
             $loading.finish('lastCbte');
@@ -664,12 +650,186 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     }
 }]);
 
-app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location', '$localStorage', 'toastr', '$loading', function($scope, $rootScope, $http, $location, $localStorage, toastr, $loading) {    
+app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'TEXT_ERRORS', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, TEXT_ERRORS) {
+    $scope.permissions = [];
+    $scope.user = angular.copy($scope.$parent.user);
+
+    $scope.vmP = {
+        dtOptions: DTOptionsBuilder.newOptions()
+        .withPaginationType('full_numbers')
+        .withBootstrap()
+        .withDOM('lfrBtip')
+        .withButtons([{
+            text: "Recargar",
+            action: function() {
+                $scope.getPermissions($scope.user);
+            }
+        }, {
+            text: "Nuevo",
+            action: function() {
+                $scope.newPermit($scope.user);
+            }
+        }, {
+            extend: 'csvHtml5',
+            exportOptions: {
+                columns: 'thead th:not(.not-sortable)'
+            },
+            title: 'permisos_' + $scope.user.username + '_' + moment().format("YYYYMMDD_HH-mm-ss")
+        }]),
+        dtColumnDefs: [
+            DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
+        ]
+    };
+
+    $scope.newPermit = function(permit) {
+        $scope.permit = {
+            username: $scope.user.username,
+            code: permit.code,
+            active: permit.active
+        };
+        $scope.modalTitle = "Nuevo Permiso"
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/permit.html'
+        });
+
+        modalInstance.result.then(function (newPermit) {
+            $scope.permit = angular.copy(newPermit);
+            $loading.start('permissions');
+
+            $http.post('/api/newPermit', $scope.permit)
+                .then(function(res) {
+                $loading.finish('permissions');
+
+                if (res.data.result) {
+                    $scope.permit = res.data.data;
+                    $scope.permissions.push($scope.permit);
+                    toastr.success("Permiso agregado con éxito");
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('permissions');
+                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            });
+        }, function () {
+            toastr.info("Ingreso de permiso cancelado");
+        });
+    };
+
+    $scope.editPermit = function(permit) {
+        $scope.permit = angular.copy(permit);
+        $scope.modalTitle = "Editar Permiso: " + permit.code
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/permit.html'
+        });
+
+        modalInstance.result.then(function (editedPermit) {
+            $scope.permit = angular.copy(editedPermit);
+            $loading.start('permissions');
+
+            $http.post('/api/editPermit', $scope.permit)
+                .then(function(res) {
+                $loading.finish('permissions');
+
+                if (res.data.result) {
+                    $scope.permit = res.data.data;
+                    var i = _.findIndex($scope.permissions, { _id: $scope.permit._id });
+                    if(i >= 0) $scope.permissions[i] = angular.copy($scope.permit);
+                    toastr.success("Permiso editado con éxito");
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('permissions');
+                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            })
+        }, function () {
+            toastr.info("Edición de permiso cancelada");
+        });
+    };
+
+    $scope.removePermit = function(permit) {
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/confirm.html'
+        });
+
+        modalInstance.result.then(function () {
+            $loading.start('permissions');
+
+            $http.post('/api/removePermit', permit)
+                .then(function(res) {
+                $loading.finish('permissions');
+
+                if (res.data.result) {
+                    var permit = res.data.data;
+                    var i = _.findIndex($scope.permissions, { _id: permit._id });
+                    if(i >= 0) $scope.permissions.splice(i,1);
+                    toastr.success("Permiso removido con éxito");
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('permissions');
+                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            });
+        }, function () {
+            //
+        });
+    }
+
+    $scope.getPermissions = function(user) {
+        $loading.start('permissions');
+
+        $http.get('/api/permissions/' + user.username)
+            .then(function(res) {
+            $loading.finish('permissions');
+
+            if(res.data.result) {
+                $scope.permissions = res.data.data;
+            } else {
+                toastr.error(res.data.err);
+            }
+        }, function(res) {
+            $loading.finish('permissions');
+            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+        });
+    };
+
+    $scope.getPermissions($scope.user);
+}]);
+
+app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location', '$localStorage', 'toastr', '$loading', 'vcRecaptchaService', function($scope, $rootScope, $http, $location, $localStorage, toastr, $loading, vcRecaptchaService) {    
     if ($localStorage.currentUser) {
         $location.path('dashboard');
     }
 
+    $scope.response = null;
+    $scope.widgetId = null;
     $scope.formData = {};
+    $scope.recaptcha = {
+        key: "6Les3h8UAAAAABnMNny1yzwwf06QWs-hQWEYHH_D"
+    };
+
+    $scope.setResponse = function (response) {
+        $scope.response = response;
+    };
+
+    $scope.setWidgetId = function (widgetId) {
+        $scope.widgetId = widgetId;
+    };
+
+    $scope.cbExpiration = function() {
+        vcRecaptchaService.reload($scope.widgetId);
+        $scope.response = null;
+    };
 
     $scope.login = function() {
         $loading.start('login');
@@ -691,55 +851,57 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
                 toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
             } else {
                 toastr.error(res.data.err);
+                vcRecaptchaService.reload($scope.widgetId);
             }
         }, function(res) {
             $loading.finish('login');
             toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            vcRecaptchaService.reload($scope.widgetId);
         });
     }
 }]);
- 
-app.directive("compareTo", function() {
+
+app.directive("compareTo", [function() {
     return {
         require: "ngModel",
         scope: {
             otherModelValue: "=compareTo"
         },
         link: function(scope, element, attributes, ngModel) {
-             
+
             ngModel.$validators.compareTo = function(modelValue) {
                 return modelValue == scope.otherModelValue;
             };
- 
+
             scope.$watch("otherModelValue", function() {
                 ngModel.$validate();
             });
         }
     };
-});
+}]);
 
-app.config(function($routeProvider, $locationProvider) {
+app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $locationProvider.hashPrefix('');
 
     $routeProvider
         .when('/', {
-        templateUrl: 'pages/login.html',
+        templateUrl: 'views/login.html',
         controller: 'LoginController'
     })
         .when('/dashboard', {
-        templateUrl: 'pages/dashboard.html',
+        templateUrl: 'views/dashboard.html',
         controller: 'DashboardController'
     })
         .when('/reportes', {
-        templateUrl: 'pages/reportes.html',
+        templateUrl: 'views/reportes.html',
         controller: 'ReportingController'
     })
         .otherwise({
         redirectTo: '/'
     });
-});
+}]);
 
-app.config(function(toastrConfig) {
+app.config(['toastrConfig', function(toastrConfig) {
     angular.extend(toastrConfig, {
         allowHtml: true,
         closeButton: false,
@@ -765,4 +927,4 @@ app.config(function(toastrConfig) {
         titleClass: 'toast-title',
         toastClass: 'toast'
     });
-});
+}]);

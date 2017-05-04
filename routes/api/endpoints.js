@@ -26,39 +26,58 @@ class Endpoints {
 
 		app.post('/api/:service/describe', this.describe.bind(this));
 
-		app.get('/api/getClients', this.getClients.bind(this));
-
-		app.get('/api/getUsers', this.getUsers.bind(this));
-
-		app.get('/api/transactions/:code', this.getTransactions.bind(this));
-
 		app.post('/api/lastCbte', this.lastCbte.bind(this));
 
 		app.post('/api/:service/:code/refresh/token', this.recreate_token.bind(this));
 
 		app.post('/api/:service/:endpoint', this.endpoint.bind(this));
 
+		app.post('/api/generarCae', this.generar_cae.bind(this));
+
+		app.post('/api/generarCaex', this.generar_caex.bind(this));
+
+		app.get('/api/cbteTipo/:code', this.getCbteTipo.bind(this));
+
+		//Verificación de permisos administrativos
+		app.use(this.administrative.bind(this));
+
+		app.get('/api/getClients', this.getClients.bind(this));
+
+		app.get('/api/getUsers', this.getUsers.bind(this));
+
+		app.get('/api/transactions/:code', this.getTransactions.bind(this));
+
+		app.get('/api/permissions/:username', this.getUserPermissions.bind(this));
+
 		app.post('/api/newUser', this.newUser.bind(this));
+
+		app.post('/api/newPermit', this.newPermit.bind(this));
 
 		app.post('/api/newClient', this.newClient.bind(this));
 
 		app.post('/api/editClient', this.editClient.bind(this));
 
+		app.post('/api/editUser', this.editUser.bind(this));
+
+		app.post('/api/editPermit', this.editPermit.bind(this));
+
 		app.post('/api/resetPassword', this.resetPassword.bind(this));
 
 		app.post('/api/removeClient', this.removeClient.bind(this));
 
+		app.post('/api/removePermit', this.removePermit.bind(this));
+
 		app.post('/api/removeUser', this.removeUser.bind(this));
-
-		app.post('/api/generarCae', this.generar_cae.bind(this));
-
-		app.post('/api/generarCaex', this.generar_caex.bind(this));
-
 
 		this.clients = {};
 	}
 
+	/*
+	 * Endpoints funcionales de AFIP
+	 */
+
 	generar_caex(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code;
 		var version = "v1";
 		var service = "wsfexv1";
@@ -107,7 +126,7 @@ class Endpoints {
 			params["Cmp"]["Id"] = counter;
 
 			return this.afip({
-				username: req.decoded ? req.decoded._doc.username : "",
+				username: username,
 				code: code,
 				version: version,
 				service: service,
@@ -154,6 +173,7 @@ class Endpoints {
 	}
 
 	generar_cae(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code;
 		var version = "v1";
 		var service = "wsfev1";
@@ -226,7 +246,7 @@ class Endpoints {
 		}
 
 		this.afip({
-			username: req.decoded ? req.decoded._doc.username : "",
+			username: username,
 			code: code,
 			version: version,
 			service: service,
@@ -302,6 +322,7 @@ class Endpoints {
 	}
 
 	lastCbte(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code;
 		var version = "v1";
 		var service = "wsfev1";
@@ -313,7 +334,7 @@ class Endpoints {
 		};
 
 		this.afip({
-			username: req.decoded ? req.decoded._doc.username : "",
+			username: username,
 			code: code,
 			version: version,
 			service: service,
@@ -413,7 +434,6 @@ class Endpoints {
 			}).then((client) => {
 				if (!client) {
 					reject({
-						result: false,
 						message: "El cliente no existe o no está habilitado. Contáctese con el Administrador del servicio de Facturación Electrónica."
 					});
 				} else {
@@ -427,6 +447,7 @@ class Endpoints {
 
 	validate_username(username, code) {
 		return new Promise((resolve, reject) => {
+			var Users = mongoose.model('Users');
 			var UserPermissions = mongoose.model('UserPermissions');
 
 			UserPermissions.findOne({
@@ -435,9 +456,20 @@ class Endpoints {
 				active: true
 			}).then((permit) => {
 				if (!permit) {
-					reject({
-						result: false,
-						message: "El usuario no tiene permisos sobre el cliente solicitado. Contáctese con el Administrador del servicio de Facturación Electrónica."
+					//Si el usuario no tiene permisos, verificar si es administrador
+					Users.findOne({
+						username: username,
+						admin: true
+					}).then((user) => {
+						if (!user) {
+							reject({
+								message: "El usuario no tiene permisos para interactuar con el cliente solicitado. Contáctese con el Administrador del servicio de Facturación Electrónica."
+							});
+						} else {
+							resolve(user);
+						}
+					}, (err) => {
+						reject(err);
 					});
 				} else {
 					resolve(permit);
@@ -505,10 +537,13 @@ class Endpoints {
 	}
 
 	recreate_token(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code;
 		var service = req.body.service;
 
-		this.validate_client(code).then((client) => {
+		this.validate_username(username, code).then((permit) => {
+			return this.validate_client(code);
+		}).then((client) => {
 			var type = client.type;
 
 			WSAA.generateToken(code, type, service)
@@ -531,16 +566,21 @@ class Endpoints {
 	}
 
 	afip(request) {
-		var code = request.code;
-		var service = request.service;
-		var endpoint = request.endpoint;
-		var params = request.params;
-		var version = request.version;
-		var username = request.username;
+		var code = request.code || "";
+		var service = request.service || "";
+		var endpoint = request.endpoint || "";
+		var params = request.params || {};
+		var version = request.version || "";
+		var username = request.username || "";
+		var saveTransaction = true;
 		var tokens, type, client;
 
+		if (request.saveTransaction === false) {
+			saveTransaction = false;
+		}
+
 		return new Promise((resolve, reject) => {
-			this.validate_username(username, code).then(() => {
+			this.validate_username(username, code).then((permit) => {
 				return this.validate_client(code);
 			}).then((validatedClient) => {
 				client = validatedClient;
@@ -571,15 +611,17 @@ class Endpoints {
 				afipRequest = _.merge(afipRequest, params);
 
 				soapClient[endpoint](afipRequest, (err, result) => {
-					this.generateTransaction({
-						username: username,
-						code: code,
-						type: type,
-						service: service,
-						endpoint: endpoint,
-						request: params,
-						response: result
-					});
+					if (saveTransaction) {
+						this.generateTransaction({
+							username: username,
+							code: code,
+							type: type,
+							service: service,
+							endpoint: endpoint,
+							request: params,
+							response: result
+						});
+					}
 
 					try {
 						logger.debug(result);
@@ -608,6 +650,7 @@ class Endpoints {
 	}
 
 	endpoint(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code;
 		var version = req.body.version || "v1";
 		var service = req.params.service;
@@ -615,7 +658,9 @@ class Endpoints {
 		var params = req.body.params;
 		var client, type, tokens;
 
-		this.validate_client(code).then((validatedClient) => {
+		this.validate_username(username, code).then((permit) => {
+			return this.validate_client(code);
+		}).then((validatedClient) => {
 			client = validatedClient;
 			type = client.type;
 
@@ -670,28 +715,38 @@ class Endpoints {
 	}
 
 	describe(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.body.code || "";
 		var version = req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint || "";
 		var params = req.body.params || {};
+		var type, client, tokens;
 
-		this.validate_client(code).then((client) => {
-			var type = client.type;
+		this.validate_username(username, code).then((permit) => {
+			return this.validate_client(code);
+		}).then((validatedClient) => {
+			client = validatedClient;
+			type = client.type;
 
-			WSAA.generateToken(code, type, service).then((tokens) => {
-				this.createClientForService(type, version, service, endpoint).then((client) => {
-					res.json(client.describe());
-				});
+			return WSAA.generateToken(code, type, service);
+		}).then((newTokens) => {
+			tokens = newTokens;
 
-			}).catch((err) => {
-				res.json({
-					result: false,
-					err: err.message
-				});
+			return this.createClientForService(type, version, service, endpoint);
+		}).then((soapClient) => {
+			res.json(soapClient.describe());
+		}).catch((err) => {
+			res.json({
+				result: false,
+				err: err.message
 			});
-		});
+		});;
 	}
+
+	/*
+	 * Endpoints de autenticación
+	 */
 
 	authenticate(req, res, next) {
 		var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.headers['authorization'];
@@ -729,7 +784,7 @@ class Endpoints {
 				return res.json({ result: false, err: err.message });
 			});
 		} else {
-			return res.status(403).json({ result: false, err: "Error en autenticación" });
+			return res.status(403).send("Error en autenticación");
 		}
 	}
 
@@ -755,6 +810,31 @@ class Endpoints {
 			});
 		}, function (err) {
 			return res.json({ result: false, err: err.message });
+		});
+	}
+
+	/*
+	 * Endpoints administrativos
+	 */
+
+	administrative(req, res, next) {
+		var username = req.decoded ? req.decoded._doc.username : "";
+		var Users = mongoose.model('Users');
+
+		Users.findOne({
+			username: username,
+			admin: true
+		}).then((user) => {
+			if (!user) {
+				return res.status(403).send("El usuario no tiene permisos administrativos.");
+			} else {
+				next();
+			}
+		}, (err) => {
+			return res.json({
+				result: false,
+				err: err.message
+			});
 		});
 	}
 
@@ -799,6 +879,24 @@ class Endpoints {
 			res.json({
 				result: true,
 				data: transactions
+			});
+		}, (err) => {
+			res.json({
+				result: false,
+				err: err.message
+			});
+		});
+	}
+
+	getUserPermissions(req, res) {
+		var UserPermissions = mongoose.model('UserPermissions');
+
+		UserPermissions.find({
+			username: req.params.username
+		}).then((permissions) => {
+			res.json({
+				result: true,
+				data: permissions
 			});
 		}, (err) => {
 			res.json({
@@ -888,6 +986,44 @@ class Endpoints {
 			_.merge(client, editedClient);
 			client.save().then((client) => {
 				res.json({ result: true, data: client });
+			}, (err) => {
+				res.json({ result: false, err: err.message });
+			});
+		}, (err) => {
+			res.json({ result: false, err: err.message });
+		});
+	}
+
+	editUser(req, res) {
+		var Users = mongoose.model('Users');
+		var editedUser = req.body;
+
+		Users.findById(editedUser._id).then((user) => {
+			if (!user)
+				return res.json({ result: false, err: "El usuario no existe" });
+
+			_.merge(user, editedUser);
+			user.save().then((user) => {
+				res.json({ result: true, data: user });
+			}, (err) => {
+				res.json({ result: false, err: err.message });
+			});
+		}, (err) => {
+			res.json({ result: false, err: err.message });
+		});
+	}
+
+	editPermit(req, res) {
+		var UserPermissions = mongoose.model('UserPermissions');
+		var editedPermit = req.body;
+
+		UserPermissions.findById(editedPermit._id).then((permit) => {
+			if (!permit)
+				return res.json({ result: false, err: "El permiso no existe" });
+
+			_.merge(permit, editedPermit);
+			permit.save().then((permit) => {
+				res.json({ result: true, data: permit });
 			}, (err) => {
 				res.json({ result: false, err: err.message });
 			});

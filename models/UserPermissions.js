@@ -5,7 +5,10 @@ var mongoose = require('mongoose'),
 var UserPermissionsSchema = new Schema({
     username: String,
     code: String,
-    active: Boolean
+    active: {
+        type: Boolean,
+        default: false
+    }
 });
 
 mongoose.model('UserPermissions', UserPermissionsSchema);

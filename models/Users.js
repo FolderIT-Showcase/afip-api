@@ -5,7 +5,11 @@ var mongoose = require('mongoose'),
 var UsersSchema = new Schema({
   name: String,
   username: String,
-  password: String
+  password: String,
+  admin: {
+    type: Boolean,
+    default: false
+  }
 });
 
 mongoose.model('Users', UsersSchema);
