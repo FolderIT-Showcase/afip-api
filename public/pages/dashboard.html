@@ -20,7 +20,7 @@
                             <td>{{client.cuit}}</td>
                             <td>{{client.type}}</td>
                             <td>
-                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editClient(client)"><i class="glyphicon glyphicon-pencil"></i></button>
+                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editClient(client)"><i class="glyphicon glyphicon-edit"></i></button>
                                 <button class="btn btn-default" uib-tooltip="Clonar" ng-click="cloneClient(client)"><i class="glyphicon glyphicon-duplicate"></i></button>
                                 <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeClient(client)"><i class="glyphicon glyphicon-remove"></i></button>
                                 <div class="btn-group pull-right" uib-dropdown>
@@ -57,7 +57,9 @@
                             <td>{{user.name}}</td>
                             <td>{{user.username}}</td>
                             <td>
-                                <button class="btn btn-warning pull-right" uib-tooltip="Eliminar" ng-click="removeUser(user)"><i class="glyphicon glyphicon-remove"></i></button>
+                                <button disabled class="btn btn-default" uib-tooltip="Permisos de Clientes" ng-click="userPermissions(user)"><i class="glyphicon glyphicon-wrench"></i></button>
+                                <button class="btn btn-default" uib-tooltip="Restablecer Contraseña" ng-click="resetPassword(user)"><i class="glyphicon glyphicon-asterisk"></i></button>
+                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeUser(user)"><i class="glyphicon glyphicon-remove"></i></button>
                             </td>
                         </tr>
                     </tbody>

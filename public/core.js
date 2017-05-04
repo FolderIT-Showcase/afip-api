@@ -511,6 +511,41 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             toastr.info("Edición de cliente cancelada");
         });
     };
+    
+    $scope.resetPassword = function(user) {
+        $scope.user = angular.copy(user);
+        $scope.modalTitle = "Restablecer Contraseña: " + user.name
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'modals/resetPassword.html'
+        });
+
+        modalInstance.result.then(function (editedUser) {
+            $scope.user.password = editedUser.newPassword;
+            $loading.start('users');
+
+            $http.post('/api/resetPassword', $scope.user)
+                .then(function(res) {
+                $loading.finish('users');
+
+                if (res.data.result) {
+                    $scope.user = res.data.data;
+                    var i = _.findIndex($scope.users, { _id: $scope.user._id });
+                    if(i >= 0) $scope.users[i] = angular.copy($scope.user);
+                    toastr.success("Contraseña restablecida con éxito");
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('users');
+                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            });
+        }, function () {
+            toastr.info("Restablecimiento de contraseña cancelado");
+        });
+    };
 
     $scope.removeClient = function(client) {
         var modalInstance = $uibModal.open({
@@ -662,6 +697,25 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
         });
     }
 }]);
+ 
+app.directive("compareTo", function() {
+    return {
+        require: "ngModel",
+        scope: {
+            otherModelValue: "=compareTo"
+        },
+        link: function(scope, element, attributes, ngModel) {
+             
+            ngModel.$validators.compareTo = function(modelValue) {
+                return modelValue == scope.otherModelValue;
+            };
+ 
+            scope.$watch("otherModelValue", function() {
+                ngModel.$validate();
+            });
+        }
+    };
+});
 
 app.config(function($routeProvider, $locationProvider) {
     $locationProvider.hashPrefix('');

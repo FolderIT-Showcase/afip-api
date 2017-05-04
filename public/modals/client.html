@@ -1,8 +1,8 @@
-<div class="modal-header">
-    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
-</div>
-<div class="modal-body" id="modal-body" dw-loading="client">
-    <form name="clientForm">
+<form id="clientForm" name="clientForm">
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+    </div>
+    <div class="modal-body" id="modal-body" dw-loading="client">
         <div class="row">
             <div class="col-md-12">
                 <div class="form-group">
@@ -48,12 +48,10 @@
                     <textarea id="csr" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.csr"></textarea>
                 </div>
             </div>
-            <div class="col-md-6">
-                <button class="btn btn-primary" type="submit" ng-disabled="clientForm.$invalid" ng-click="$close(client)">OK</button>
-            </div>
         </div>
-    </form>
-</div>
-<div class="modal-footer">
-    <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
-</div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" ng-disabled="clientForm.$invalid" ng-click="$close(client)">Aceptar</button>
+        <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
+    </div>
+</form>

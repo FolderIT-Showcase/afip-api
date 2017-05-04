@@ -1,10 +1,10 @@
-<div class="modal-header">
-    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
-</div>
-<div class="modal-body" id="modal-body" dw-loading="user">
-    <form name="userForm">
+<form name="userForm">
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+    </div>
+    <div class="modal-body" id="modal-body" dw-loading="user">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="form-group">
                     <label for="name">Nombre</label>
                     <input type="text" id="name" class="form-control" placeholder="Nombre" required="" autofocus="" ng-model="user.name">
@@ -23,11 +23,15 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <button class="btn btn-primary" type="submit" ng-disabled="userForm.$invalid" ng-click="$close(user)">OK</button>
+                <div class="form-group">
+                    <label for="password2">Repetir Contraseña</label>
+                    <input type="password" id="password2" autocomplete="new-password" class="form-control" placeholder="Repita la contraseña" required="" autofocus="" ng-model="user.password2" compare-to="user.password">
+                </div>
             </div>
         </div>
-    </form>
-</div>
-<div class="modal-footer">
-    <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
-</div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" ng-disabled="userForm.$invalid" ng-click="$close(user)">Aceptar</button>
+        <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
+    </div>
+</form>
