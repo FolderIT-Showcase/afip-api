@@ -44,6 +44,8 @@ class Endpoints {
 
 		app.post('/api/editClient', this.editClient.bind(this));
 
+		app.post('/api/resetPassword', this.resetPassword.bind(this));
+
 		app.post('/api/removeClient', this.removeClient.bind(this));
 
 		app.post('/api/removeUser', this.removeUser.bind(this));
@@ -167,13 +169,14 @@ class Endpoints {
 		var idIVA = req.body.IdIVA || null;
 		var porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
 
-		//Tolerancia de 0.1 decimales
-		if (porcIVA == 0) idIVA = 3;
-		if (porcIVA >= 2.4 && porcIVA <= 2.6) idIVA = 9;
-		if (porcIVA >= 4.9 && porcIVA <= 5.1) idIVA = 8;
-		if (porcIVA >= 10.4 && porcIVA <= 10.6) idIVA = 4;
-		if (porcIVA >= 20.9 && porcIVA <= 21.1) idIVA = 5;
-		if (porcIVA >= 26.9 && porcIVA <= 27.1) idIVA = 6;
+		if (!idIVA) {
+			// Tolerancia de 0.1 decimales
+			if (porcIVA == 0) idIVA = 3;
+			if (porcIVA >= 2.4 && porcIVA <= 2.6) idIVA = 9;
+			if (porcIVA >= 4.9 && porcIVA <= 5.1) idIVA = 8;
+			if (porcIVA >= 10.4 && porcIVA <= 10.6) idIVA = 4;
+			if (porcIVA >= 20.9 && porcIVA <= 21.1) idIVA = 5;
+			if (porcIVA >= 26.9 && porcIVA <= 27.1) idIVA = 6;
 		}
 
 		if (!idIVA) {
@@ -490,11 +493,11 @@ class Endpoints {
 	}
 
 	afip(request) {
-			var code = request.code;
-			var service = request.service;
-			var endpoint = request.endpoint;
-			var params = request.params;
-			var version = request.version;
+		var code = request.code;
+		var service = request.service;
+		var endpoint = request.endpoint;
+		var params = request.params;
+		var version = request.version;
 		var username = request.username;
 		var tokens, type, client;
 
@@ -510,56 +513,56 @@ class Endpoints {
 				tokens = newTokens;
 				return this.createClientForService(type, version, service, endpoint);
 			}).then((soapClient) => {
-						var afipRequest = {}
+				var afipRequest = {}
 
-						// Parsear versión de WSFE
+				// Parsear versión de WSFE
+				if (version == 'v1') {
+					afipRequest.Auth = {
+						Token: tokens.token,
+						Sign: tokens.sign,
+						Cuit: client.cuit
+					};
+				}
+
+				if (version == 'v2') {
+					afipRequest.token = tokens.token;
+					afipRequest.sign = tokens.sign;
+					afipRequest.cuitRepresentada = client.cuit;
+				}
+
+				afipRequest = _.merge(afipRequest, params);
+
+				soapClient[endpoint](afipRequest, (err, result) => {
+					this.generateTransaction({
+						username: username,
+						code: code,
+						type: type,
+						service: service,
+						endpoint: endpoint,
+						request: params,
+						response: result
+					});
+
+					try {
+						logger.debug(result);
+
 						if (version == 'v1') {
-							afipRequest.Auth = {
-								Token: tokens.token,
-								Sign: tokens.sign,
-								Cuit: client.cuit
-							};
+							resolve(result[`${endpoint}Result`]);
 						}
 
 						if (version == 'v2') {
-							afipRequest.token = tokens.token;
-							afipRequest.sign = tokens.sign;
-							afipRequest.cuitRepresentada = client.cuit;
+							resolve(result.toJSON());
 						}
-
-						afipRequest = _.merge(afipRequest, params);
-
-						soapClient[endpoint](afipRequest, (err, result) => {
-							this.generateTransaction({
-						username: username,
-								code: code,
-								type: type,
-								service: service,
-								endpoint: endpoint,
-								request: params,
-								response: result
-							});
-
-							try {
-								logger.debug(result);
-
-								if (version == 'v1') {
-									resolve(result[`${endpoint}Result`]);
-								}
-
-								if (version == 'v2') {
-									resolve(result.toJSON());
-								}
-							} catch (err) {
-								logger.error(err);
-								reject({
-							message: "Ocurrió un error al intentar interpretar la respuesta a la solicitud."
-								});
-							}
-						});
-					}).catch((err) => {
+					} catch (err) {
 						logger.error(err);
 						reject({
+							message: "Ocurrió un error al intentar interpretar la respuesta a la solicitud."
+						});
+					}
+				});
+			}).catch((err) => {
+				logger.error(err);
+				reject({
 					message: err.message
 				});
 			});
@@ -584,15 +587,15 @@ class Endpoints {
 
 			return this.createClientForService(type, version, service, endpoint);
 		}).then((soapClient) => {
-					var afipRequest = {
-						Auth: {
-							Token: tokens.token,
-							Sign: tokens.sign,
-							Cuit: client.cuit
-						}
-					};
+			var afipRequest = {
+				Auth: {
+					Token: tokens.token,
+					Sign: tokens.sign,
+					Cuit: client.cuit
+				}
+			};
 
-					afipRequest = _.merge(afipRequest, params);
+			afipRequest = _.merge(afipRequest, params);
 
 			if (typeof (soapClient[endpoint]) !== 'function') {
 				res.json({
@@ -602,23 +605,23 @@ class Endpoints {
 				return;
 			}
 
-					soapClient[endpoint](afipRequest, (err, result) => {
-						this.generateTransaction({
+			soapClient[endpoint](afipRequest, (err, result) => {
+				this.generateTransaction({
 					username: req.decoded ? req.decoded._doc.username : "",
-							code: code,
-							type: type,
-							service: service,
-							endpoint: endpoint,
-							request: params,
-							response: result
-						});
+					code: code,
+					type: type,
+					service: service,
+					endpoint: endpoint,
+					request: params,
+					response: result
+				});
 
-						try {
-							res.json(result[`${endpoint}Result`]);
-						} catch (e) {
-							res.json(result);
-						}
-					});
+				try {
+					res.json(result[`${endpoint}Result`]);
+				} catch (e) {
+					res.json(result);
+				}
+			});
 		}).catch((err) => {
 			logger.error(err)
 			res.json({
@@ -825,6 +828,26 @@ class Endpoints {
 			_.merge(client, editedClient);
 			client.save().then((client) => {
 				res.json({ result: true, data: client });
+			}, (err) => {
+				res.json({ result: false, err: err.message });
+			});
+		}, (err) => {
+			res.json({ result: false, err: err.message });
+		});
+	}
+
+	resetPassword(req, res) {
+		var Users = mongoose.model('Users');
+		var editedUser = req.body;
+
+		Users.findById(editedUser._id).then((user) => {
+			if (!user)
+				return res.json({ result: false, err: "El usuario no existe" });
+
+			user.password = md5(editedUser.newPassword);
+
+			user.save().then((user) => {
+				res.json({ result: true, data: user });
 			}, (err) => {
 				res.json({ result: false, err: err.message });
 			});
