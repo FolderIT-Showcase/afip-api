@@ -9,16 +9,28 @@
                 <thead>
                     <tr>
                         <th>Servicio</th>
+                        <th>Usuario</th>
                         <th>Endpoint</th>
-                        <th style="min-width:200px;">Fecha</th>
-                        <th class="not-sortable" style="min-width:250px;"></th>
+                        <th style="min-width:150px;">Fecha</th>
+                        <th>P.V.</th>
+                        <th>Tipo</th>
+                        <th>Nº</th>
+                        <th>Rto.</th>
+                        <th>CAE</th>
+                        <th class="not-sortable"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="transaction in transactions">
                         <td>{{transaction.service}}</td>
+                        <td>{{transaction.username}}</td>
                         <td>{{transaction.endpoint}}</td>
                         <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
+                        <td>{{transaction.ptoVta}}</td>
+                        <td>{{transaction.cbteTipo}}</td>
+                        <td>{{transaction.cbteNro}}</td>
+                        <td>{{transaction.resultado}}</td>
+                        <td>{{transaction.cae}}</td>
                         <td>
                             <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)"><i class="glyphicon glyphicon-eye-open"></i></button>
                         </td>
