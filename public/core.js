@@ -7,6 +7,7 @@ var app = angular.module('node-fe', [
     'ngSanitize',
     'angularMoment',
     'toastr',
+    'vcRecaptcha',
     'darthwade.dwLoading',
     'ui.bootstrap',
     'datatables',

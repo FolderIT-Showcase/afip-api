@@ -29,7 +29,8 @@
     "angular-toastr": "^2.1.1",
     "angular-moment": "^1.0.1",
     "angular-loading": "^0.1.4",
-    "angular-sanitize": "^1.6.4"
+    "angular-sanitize": "^1.6.4",
+    "angular-recaptcha": "^4.1.0"
   },
   "resolutions": {
     "angular": "^1.6.4"
