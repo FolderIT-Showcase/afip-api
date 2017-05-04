@@ -832,6 +832,28 @@ class Endpoints {
 		});
 	}
 
+	newPermit(req, res) {
+		var UserPermissions = mongoose.model('UserPermissions');
+
+		UserPermissions.findOne({
+			username: req.body.username,
+			code: req.body.code
+		}).then(function (permit) {
+			if (permit)
+				return res.json({ result: false, err: "El permiso ya existe" });
+
+			var permit = new UserPermissions(req.body);
+
+			permit.save().then(function (permit) {
+				res.json({ result: true, data: permit });
+			}, function (err) {
+				return res.json({ result: false, err: err.message });
+			});
+		}, function (err) {
+			return res.json({ result: false, err: err.message });
+		});
+	}
+
 	newClient(req, res) {
 		var Clients = mongoose.model('Clients');
 
@@ -900,6 +922,17 @@ class Endpoints {
 
 		Clients.findByIdAndRemove(client._id).exec().then((client) => {
 			res.json({ result: true, data: client });
+		}, (err) => {
+			res.json({ result: false, err: err.message });
+		});
+	}
+
+	removePermit(req, res) {
+		var UserPermissions = mongoose.model('UserPermissions');
+		var permit = req.body;
+
+		UserPermissions.findByIdAndRemove(permit._id).exec().then((permit) => {
+			res.json({ result: true, data: permit });
 		}, (err) => {
 			res.json({ result: false, err: err.message });
 		});
