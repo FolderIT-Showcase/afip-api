@@ -50,8 +50,105 @@ class Endpoints {
 
 		app.post('/api/generarCae', this.generar_cae.bind(this));
 
+		app.post('/api/generarCaex', this.generar_caex.bind(this));
+
 
 		this.clients = {};
+	}
+
+	generar_caex(req, res) {
+		var code = req.body.code;
+		var version = "v1";
+		var service = "wsfexv1";
+		var endpoint = "FEXAuthorize";
+
+		var impTotal = parseFloat(req.body.ImpTotal.replace(' ', '').replace(',', ''));
+		var monedaCotizacion = parseFloat(req.body.MonedaCotizacion.replace(' ', '').replace(',', ''));
+
+		var items = [];
+
+		_.forEach(req.body.Items, (e) => {
+			var itemImpTotal = parseFloat(e.ImpTotal.replace(' ', '').replace(',', ''));
+
+			items.push({
+				"Item": {
+					"Pro_ds": e.Descripcion || "",
+					"Pro_umed": e.UnidadMedida,
+					"Pro_total_item": itemImpTotal
+				}
+			});
+		});
+
+		var params = {
+			"Cmp": {
+				"Cbte_Tipo": Number(req.body.CbteTipo),
+				"Fecha_cbte": req.body.CbteFch,
+				"Punto_vta": Number(req.body.PtoVta),
+				"Cbte_nro": Number(req.body.CbteNro),
+				"Tipo_expo": req.body.TipoExportacion || 2,
+				"Permiso_existente": req.body.PermisoExportacion || "",
+				"Dst_cmp": req.body.Pais,
+				"Cliente": req.body.Cliente,
+				"Cuit_pais_cliente": req.body.DocNro,
+				"Domicilio_cliente": req.body.CliDomicilio,
+				"Moneda_Id": req.body.Moneda,
+				"Moneda_ctz": monedaCotizacion,
+				"Imp_total": impTotal,
+				"Forma_pago": req.body.FormaPago,
+				"Incoterms": req.body.Incoterms,
+				"Idioma_cbte": "1", // Español
+				"Items": items
+			}
+		};
+
+		this.get_counter(code, service).then((counter) => {
+			params["Cmp"]["Id"] = counter;
+
+			return this.afip({
+				username: req.decoded ? req.decoded._doc.username : "",
+				code: code,
+				version: version,
+				service: service,
+				endpoint: endpoint,
+				params: params
+			});
+		}).then((result) => {
+			var response = _.merge({}, result.FEXResultAuth);
+
+			var resObj = {
+				result: true,
+				data: {
+					CAE: response.Cae,
+					CAEFchVto: response.Fch_venc_Cae,
+					CbteFch: response.Fch_cbte
+				}
+			};
+
+			if (!resObj.data.CAE || !resObj.data.CAEFchVto || !resObj.data.CbteFch) {
+				logger.debug(result);
+
+				var errs = '';
+				var obs = [result.FEXErr];
+
+				_.forEach(obs, (e) => {
+					var b = new Buffer(e.ErrMsg, 'binary').toString('utf8');
+
+					errs += e.ErrCode + " - " + b + (e === obs[obs.length] ? "" : "\\r\\n\\r\\n");
+				});
+
+				resObj.result = false;
+				resObj.err = (obs.length > 1 ? "Ocurrieron " + obs.length + " errores" : "Ocurrió 1 error") + " al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.";
+				resObj.errDetails = errs;
+			}
+
+			res.json(resObj);
+		}).catch((err) => {
+			logger.error(err);
+			res.json({
+				result: false,
+				err: err.message
+			});
+		});
 	}
 
 	generar_cae(req, res) {
@@ -258,6 +355,29 @@ class Endpoints {
 		});
 	}
 
+	get_counter(code, service) {
+		return new Promise((resolve, reject) => {
+			var Counters = mongoose.model('Counters');
+
+			Counters.findOneAndUpdate({
+				code: code,
+				service: service,
+			}, {
+					$inc: {
+						seq: 1
+					}
+				}, {
+					upsert: true
+				}).exec((err, counter) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(counter ? counter.seq : 0);
+					}
+				});
+		});
+	}
+
 	validate_client(code) {
 		return new Promise((resolve, reject) => {
 			var Clients = mongoose.model('Clients');
@@ -317,6 +437,7 @@ class Endpoints {
 			var Transactions = mongoose.model('Transactions');
 
 			var transaction = new Transactions({
+				username: params.username,
 				code: params.code,
 				type: params.type,
 				service: params.service,
@@ -536,7 +657,6 @@ class Endpoints {
 					next();
 				}
 			});
-
 		} else if (username && password) {
 			//Verificar username+password
 			var Users = mongoose.model('Users');
@@ -550,12 +670,14 @@ class Endpoints {
 				if (user.password != md5(req.body.password))
 					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
 
+				req.decoded = {
+					"_doc": user
+				};
 
 				next();
 			}, function (err) {
 				return res.json({ result: false, err: err.message });
 			});
-
 		} else {
 			return res.status(403).json({ result: false, err: "Error en autenticación" });
 		}

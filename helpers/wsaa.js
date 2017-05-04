@@ -180,6 +180,10 @@ class Tokens {
 			service = 'wsfe';
 		}
 
+		if (service == 'wsfexv1') {
+			service = 'wsfex';
+		}
+
 		return new Promise((resolve, reject) => {
 			this.getToken(code, type, service).then((token) => {
 				if (token) {
