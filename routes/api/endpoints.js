@@ -12,6 +12,8 @@ var _ = require('lodash'),
 	_ = require('lodash'),
 	fs = require('fs'),
 	path = require('path'),
+	request = require('request'),
+	config = require('./../../config'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 
 class Endpoints {
@@ -789,7 +791,15 @@ class Endpoints {
 	}
 
 	login(req, res) {
+		logger.debug(req.body);
 		var Users = mongoose.model('Users');
+
+		if (!req.body.rcResponse) {
+			return res.json({
+				result: false,
+				err: "Por favor ingrese la verificación reCAPTCHA."
+			});
+		}
 
 		Users.findOne({
 			username: req.body.username
@@ -804,9 +814,30 @@ class Endpoints {
 				expiresIn: 60 * 60 * 24 // Expirar el token en 24 horas
 			});
 
-			res.json({
-				result: true,
-				token: token
+			var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + config.rcSecret + "&response=" + req.body.rcResponse + "&remoteip=";
+
+			request(verificationUrl, (error, response, body) => {
+				if (error) {
+					logger.error(err);
+					return res.json({
+						result: false,
+						err: "Ocurrió un error al intentar verificar el reCAPTCHA. Por favor, intente nuevamente."
+					});
+				}
+
+				body = JSON.parse(body);
+
+				if (body.success === true) {
+					res.json({
+						result: true,
+						token: token
+					});
+				} else {
+					res.json({
+						result: false,
+						err: "La verificación reCAPTCHA ha expirado o es inválida. Intente nuevamente."
+					});
+				}
 			});
 		}, function (err) {
 			return res.json({ result: false, err: err.message });
