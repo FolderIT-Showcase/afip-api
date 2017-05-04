@@ -343,6 +343,44 @@ class Endpoints {
 		});
 	}
 
+	getCbteTipo(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
+		var code = req.params.code;
+		var version = "v1";
+		var service = "wsfev1";
+		var endpoint = "FEParamGetTiposCbte";
+
+		this.afip({
+			username: username,
+			code: code,
+			version: version,
+			service: service,
+			endpoint: endpoint,
+			saveTransaction: false
+		}).then((result) => {
+			var resObj = {
+				result: true
+			};
+
+			if (result.Errors) {
+				var errs = result.Errors.Err;
+
+				resObj.result = false;
+				resObj.err = errs.length ? errs : [errs];
+			} else {
+				resObj.data = result.ResultGet.CbteTipo;
+			}
+
+			res.json(resObj);
+		}).catch((err) => {
+			logger.error(err);
+			res.json({
+				result: false,
+				err: err.message
+			});
+		});
+	}
+
 	get_counter(code, service) {
 		return new Promise((resolve, reject) => {
 			var Counters = mongoose.model('Counters');
