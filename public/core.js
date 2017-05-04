@@ -231,6 +231,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         dtOptions: DTOptionsBuilder.newOptions()
         .withPaginationType('full_numbers')
         .withBootstrap()
+        .withOption('aaSorting', [[3, 'desc']])
         .withDOM('lfrBtip')
         .withButtons([{
             text: "Recargar",
@@ -310,6 +311,34 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
             if(res.data.result) {
                 $scope.transactions = res.data.data;
+
+                //Resaltar los datos más importantes
+                _.forEach($scope.transactions, function(e) {
+                    var response = JSON.parse(e.response || {});
+                    //WSFE
+                    if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
+                        var det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
+                        e.resultado = det.Resultado;
+                        e.cae = det.CAE;
+                        e.cbteNro = det.CbteDesde;
+                    }
+                    if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeCabResp) {
+                        var cab = response.FECAESolicitarResult.FeCabResp;
+                        e.ptoVta = cab.PtoVta;
+                        e.cbteTipo = cab.CbteTipo;
+                    }
+                    
+                    //WSFEX
+                    if (response.FEXAuthorizeResult && response.FEXAuthorizeResult.FEXResultAuth) {
+                        var cab = response.FEXAuthorizeResult.FEXResultAuth;
+                        e.ptoVta = cab.Punto_vta;
+                        e.cbteTipo = cab.Cbte_tipo;
+                        e.resultado = cab.Resultado;
+                        e.cae = cab.Cae;
+                        e.cbteNro = cab.Cbte_nro;
+                    }
+                });
+
                 $scope.modalTitle = "Transacciones del Cliente: " + client.code;
             } else {
                 toastr.error(res.data.err);
@@ -449,7 +478,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
     $scope.editClient = function(client) {
         $scope.client = angular.copy(client);
-        $scope.modalTitle = "Editar Cliente"
+        $scope.modalTitle = "Editar Cliente: " + client.name
 
         var modalInstance = $uibModal.open({
             backdrop: 'static',
