@@ -1,0 +1,33 @@
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body" dw-loading="permissions">
+    <div class="row">
+        <div class="col-md-12">
+            <table datatable="ng" dt-options="vmP.dtOptions" dt-column-defs="vmP.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Código de Cliente</th>
+                        <th class="fit">Activo</th>
+                        <th class="not-sortable" style="width:120px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="permit in permissions">
+                        <td>{{permit.code}}</td>
+                        <td><div class="checkbox checkbox-primary"><input disabled type="checkbox" ng-model="permit.active"><label></label></div></td>
+                        <td>
+                            <div>
+                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editPermit(permit)"><i class="glyphicon glyphicon-edit"></i></button>
+                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removePermit(permit)"><i class="glyphicon glyphicon-remove"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" type="button" ng-click="$dismiss()">Cerrar</button>
+</div>

@@ -1,0 +1,27 @@
+<form name="permitForm">
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+    </div>
+    <div class="modal-body" id="modal-body" dw-loading="user">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="code">Cliente</label>
+                    <input type="text" id="code" class="form-control" placeholder="Código de cliente" required="" autofocus="" ng-model="permit.code">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="checkbox checkbox-primary">
+                        <input type="checkbox" id="active" value="false" ng-model="permit.active">
+                        <label for="active">Activo</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" ng-disabled="permitForm.$invalid" ng-click="$close(permit)">Aceptar</button>
+        <button class="btn btn-warning" type="button" ng-click="$dismiss()">Cancelar</button>
+    </div>
+</form>

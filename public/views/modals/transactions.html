@@ -5,18 +5,18 @@
     <div class="row">
         <div class="col-md-12">
             <h2>Transacciones</h2>
-            <table datatable="ng" dt-options="vmT.dtOptions" dt-column-defs="vmT.dtColumnDefs" class="table table-custom table-striped table-bordered">
+            <table datatable="ng" dt-options="vmT.dtOptions" dt-column-defs="vmT.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Servicio</th>
-                        <th>Usuario</th>
-                        <th>Endpoint</th>
+                        <th class="fit">Servicio</th>
+                        <th class="fit">Usuario</th>
+                        <th class="fit">Endpoint</th>
                         <th style="min-width:150px;">Fecha</th>
                         <th>P.V.</th>
                         <th>Tipo</th>
                         <th>Nº</th>
                         <th>Rto.</th>
-                        <th>CAE</th>
+                        <th class="fit">CAE</th>
                         <th class="not-sortable"></th>
                     </tr>
                 </thead>
@@ -27,7 +27,7 @@
                         <td>{{transaction.endpoint}}</td>
                         <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
                         <td>{{transaction.ptoVta}}</td>
-                        <td>{{transaction.cbteTipo}}</td>
+                        <td><div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div></td>
                         <td>{{transaction.cbteNro}}</td>
                         <td>{{transaction.resultado}}</td>
                         <td>{{transaction.cae}}</td>

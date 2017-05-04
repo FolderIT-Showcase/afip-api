@@ -3,14 +3,14 @@
         <div class="row">
             <div class="col-md-12" dw-loading="clients">
                 <h2>Clientes</h2>
-                <table datatable="ng" dt-options="vmC.dtOptions" dt-column-defs="vmC.dtColumnDefs" class="table table-custom table-striped table-bordered">
+                <table datatable="ng" dt-options="vmC.dtOptions" dt-column-defs="vmC.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th style="min-width:150px;">Código</th>
+                            <th class="fit">Código</th>
                             <th>Nombre</th>
-                            <th style="min-width:150px;">CUIT</th>
-                            <th>Tipo</th>
-                            <th class="not-sortable" style="min-width:250px;"></th>
+                            <th class="fit">CUIT</th>
+                            <th class="fit">Tipo</th>
+                            <th class="not-sortable" style="width:275px;"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,20 +44,23 @@
         <div class="row">
             <div class="col-md-12" dw-loading="users">
                 <h2>Usuarios</h2>
-                <table datatable="ng" dt-options="vmU.dtOptions" dt-column-defs="vmU.dtColumnDefs" class="table table-custom table-striped table-bordered">           
+                <table datatable="ng" dt-options="vmU.dtOptions" dt-column-defs="vmU.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">           
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th style="min-width:200px;">Usuario</th>
-                            <th class="not-sortable" style="min-width:250px;"></th>
+                            <th class="fit">Usuario</th>
+                            <th class="fit">Administrador</th>
+                            <th class="not-sortable" style="width:220px;"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="user in users">
                             <td>{{user.name}}</td>
                             <td>{{user.username}}</td>
+                            <td><div class="checkbox checkbox-primary"><input disabled type="checkbox" ng-model="user.admin"><label></label></div></td>
                             <td>
-                                <button disabled class="btn btn-default" uib-tooltip="Permisos de Clientes" ng-click="userPermissions(user)"><i class="glyphicon glyphicon-wrench"></i></button>
+                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editUser(user)"><i class="glyphicon glyphicon-edit"></i></button>
+                                <button class="btn btn-default" uib-tooltip="Permisos de Clientes" ng-click="userPermissions(user)"><i class="glyphicon glyphicon-wrench"></i></button>
                                 <button class="btn btn-default" uib-tooltip="Restablecer Contraseña" ng-click="resetPassword(user)"><i class="glyphicon glyphicon-asterisk"></i></button>
                                 <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeUser(user)"><i class="glyphicon glyphicon-remove"></i></button>
                             </td>
