@@ -332,7 +332,7 @@ class Endpoints {
 
 		var params = {
 			"PtoVta": req.body.PtoVta,
-			"CbteTipo": req.body.CbteTipo.Id
+			"CbteTipo": req.body.CbteTipo
 		};
 
 		this.afip({

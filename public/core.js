@@ -197,6 +197,15 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     }
 
     reload();
+    
+    $scope.formatCbteTipo = function(code) {
+        console.log($scope.CbteTipo);
+        for (var i=0; i < $scope.CbteTipo.length; i++) {
+            if (code === $scope.CbteTipo[i].Id) {
+                return $scope.CbteTipo[i].Desc;
+            }
+        }
+    };
 
     $scope.getTransactions = function(client) {
         $loading.start('transactions');
@@ -623,7 +632,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
             if (res.data.result) {
                 $scope.response = "Punto de Venta: <strong>" + formData.PtoVta + "</strong><br/>"
-                $scope.response += "Tipo de Comprobante: <strong>" + _.find($scope.CbteTipo,{Id: formData.CbteTipo.Id}).Desc + "</strong><br/>"
+                $scope.response += "Tipo de Comprobante: <strong>" + _.find($scope.CbteTipo,{Id: formData.CbteTipo}).Desc + "</strong><br/>"
                 $scope.response += "Nº Último Comprobante: <strong>" + res.data.data + "</strong>";
                 $scope.responseCollapsed = false;
             } else {

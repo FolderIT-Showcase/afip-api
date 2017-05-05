@@ -16,7 +16,8 @@
                     <input type="text" class="form-control" ng-model="formData.CbteTipo" uib-typeahead="type.Id as type.Desc for type in CbteTipo | filter:$viewValue | limitTo:8"
                            typeahead-show-hint="true"
                            typeahead-min-length="0"
-                           typeahead-editable="false">
+                           typeahead-editable="false"
+                           typeahead-input-formatter="formatCbteTipo($model)">
                 </div>
             </div>
             <div class="col-md-6">
