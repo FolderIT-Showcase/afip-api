@@ -197,7 +197,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     }
 
     reload();
-    
+
     $scope.formatCbteTipo = function(code) {
         console.log($scope.CbteTipo);
         for (var i=0; i < $scope.CbteTipo.length; i++) {
@@ -224,13 +224,18 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
                 //Resaltar los datos más importantes
                 _.forEach($scope.transactions, function(e) {
-                    var response = JSON.parse(e.response || {});
+                    var response = JSON.parse(e.response || "{}");
+                    var request = JSON.parse(e.request || "{}");
+
                     //WSFE
                     if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
                         var det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
+                        var detReq = request.FeCAEReq.FeDetReq.FECAEDetRequest[0];
                         e.resultado = det.Resultado;
                         e.cae = det.CAE;
                         e.cbteNro = det.CbteDesde;
+                        e.importe = detReq.ImpTotal * detReq.MonCotiz;
+                        e.cbteFca = moment(det.CbteFch,"YYYYMMDD").format("DD/MM/YYYY");
                     }
                     if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeCabResp) {
                         var cab = response.FECAESolicitarResult.FeCabResp;
@@ -241,11 +246,14 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                     //WSFEX
                     if (response.FEXAuthorizeResult && response.FEXAuthorizeResult.FEXResultAuth) {
                         var cab = response.FEXAuthorizeResult.FEXResultAuth;
+                        var cmp = request.Cmp;
                         e.ptoVta = cab.Punto_vta;
                         e.cbteTipo = cab.Cbte_tipo;
                         e.resultado = cab.Resultado;
                         e.cae = cab.Cae;
                         e.cbteNro = cab.Cbte_nro;
+                        e.importe = cmp.Imp_total * cmp.Moneda_Ctz;
+                        e.cbteFca = moment(cab.Fch_cbte,"YYYYMMDD").format("DD/MM/YYYY");
                     }
 
                     //Descripción del tipo de comprobante
@@ -279,7 +287,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
-            size: 'lg',
+            size: 'xl',
             templateUrl: 'views/modals/transactions.html'
         });
 

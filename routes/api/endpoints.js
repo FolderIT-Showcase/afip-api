@@ -626,8 +626,6 @@ class Endpoints {
 					}
 
 					try {
-						logger.debug(result);
-
 						if (version == 'v1') {
 							resolve(result[`${endpoint}Result`]);
 						}

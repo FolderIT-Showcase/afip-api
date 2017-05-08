@@ -10,14 +10,16 @@
                     <tr>
                         <th class="fit">Servicio</th>
                         <th class="fit">Usuario</th>
-                        <th class="fit">Endpoint</th>
-                        <th style="min-width:150px;">Fecha</th>
-                        <th>P.V.</th>
-                        <th>Tipo</th>
-                        <th>Nº</th>
-                        <th>Rto.</th>
+                        <th>Endpoint</th>
+                        <th class="fit" style="min-width:150px;">Fecha</th>
+                        <th class="fit">P.V.</th>
+                        <th class="fit">Tipo</th>
+                        <th class="fit">Nº</th>
+                        <th class="fit">Importe</th>
+                        <th class="fit">Fca. Cbte.</th>
+                        <th class="fit">Rto.</th>
                         <th class="fit">CAE</th>
-                        <th class="not-sortable"></th>
+                        <th class="not-sortable" style="width:55px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,6 +31,8 @@
                         <td>{{transaction.ptoVta}}</td>
                         <td><div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div></td>
                         <td>{{transaction.cbteNro}}</td>
+                        <td>{{transaction.importe | currency}}</td>
+                        <td>{{transaction.cbteFca | date:"dd/MM/yyyy"}}</td>
                         <td>{{transaction.resultado}}</td>
                         <td>{{transaction.cae}}</td>
                         <td>
