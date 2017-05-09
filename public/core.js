@@ -24,7 +24,7 @@ app.run(['$rootScope', '$http', '$localStorage', '$loading', 'jwtHelper', '$loca
         text: 'Cargando...',
         fps: 60
     });
-    
+
     if ($localStorage.jwt) {
         $rootScope.loggedIn = true;
         $http.defaults.headers.common.Authorization = $localStorage.jwt;
@@ -76,7 +76,7 @@ app.config(function ($provide, $httpProvider) {
     $httpProvider.interceptors.push('httpAbortInterceptor');
 });
 
-app.controller('MainController', ['$scope', function($scope) {    
+app.controller('MainController', ['$scope', function($scope) {
 
 }]);
 
@@ -888,7 +888,8 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
         $loading.start('login');
 
         $http.post('/api/login', $scope.formData)
-            .then(function(res) { 
+            .then(function(res) {
+            $loading.finish('login');  
 
             if(res.data.result) {
                 $localStorage.jwt = res.data.token;
@@ -897,7 +898,6 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
 
                 $http.defaults.headers.common.Authorization = res.data.token;
 
-                $loading.finish('login');  
                 toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
                 $location.path('dashboard');
             } else {
