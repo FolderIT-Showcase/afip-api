@@ -1,4 +1,3 @@
-// public/core.js
 var app = angular.module('node-fe', [
     'ngRoute',
     'ngStorage',
@@ -8,6 +7,7 @@ var app = angular.module('node-fe', [
     'angularMoment',
     'toastr',
     'vcRecaptcha',
+    'angular-jwt',
     'darthwade.dwLoading',
     'ui.bootstrap',
     'datatables',
@@ -19,18 +19,55 @@ app.service('TEXT_ERRORS', [function() {
     this.ERR_API_CONNECTION = "Error de conexión a la API";
 }]);
 
-app.run(['$rootScope', '$http', '$localStorage', '$loading', function($rootScope, $http, $localStorage, $loading) {
+app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHelper', '$injector', '$rootScope', 'TEXT_ERRORS', function ($q, $location, $localStorage, jwtHelper, $injector, $rootScope, TEXT_ERRORS) {
+    var canceller = $q.defer();
+
+    return {
+        request: function (config) {
+            var toastr = $injector.get('toastr');
+
+            if (config.url.match('api/') && !config.url.match('api/login') && (!$localStorage.jwt || jwtHelper.isTokenExpired($localStorage.jwt))) {
+                config.timeout = 0;
+                $localStorage.jwt = '';
+                $rootScope.loggedIn = false;
+                
+                config.timeout = 0;
+                config.aborted = true;
+            }
+            
+            return config || $q.when(config);
+        },
+        responseError: function(rejection) {
+            var toastr = $injector.get('toastr');
+            
+            if (rejection.aborted) {
+                toastr.warning("Su sesión ha expirado. Por favor, reingrese al sistema.");
+                canceller.resolve('Session Expired');
+                $location.path('/');
+            } else if (rejection.status === 401) {
+                toastr.warning("Su sesión es inválida o ha expirado. Por favor, reingrese al sistema.");
+                canceller.resolve('Unauthorized');
+                $location.path('/');
+            } else if (rejection.status === 403) {
+                toastr.warning("Su usuario no tiene permisos para realizar la operación.");
+                canceller.resolve('Forbidden');
+            } else {
+                toastr.error(rejection.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            }
+            return $q.reject(rejection);
+        }
+    };
+}]);
+
+app.config(function ($provide, $httpProvider) {
+    $httpProvider.interceptors.push('httpAbortInterceptor');
+});
+
+app.run(['$rootScope', '$http', '$localStorage', '$loading', 'jwtHelper', '$location', function($rootScope, $http, $localStorage, $loading, jwtHelper, $location) {
     $loading.setDefaultOptions({
         text: 'Cargando...',
         fps: 60
     });
-
-    if ($localStorage.currentUser) {
-        $rootScope.loggedIn = true;
-        $http.defaults.headers.common.Authorization = $localStorage.currentUser.token;
-    } else {
-        $rootScope.loggedIn = false;
-    }
 }]);
 
 app.controller('MainController', ['$scope', function($scope) {    
@@ -52,7 +89,7 @@ app.controller('ReportingController', ['$scope', function($scope) {
 
 }]);
 
-app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'TEXT_ERRORS', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, TEXT_ERRORS) {
+app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading) {
     $scope.clients = [];
     $scope.users = [];
     $scope.client = {};
@@ -160,7 +197,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         }, function(res) {
             $scope.clients = [];
             $loading.finish('clients');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
 
             if(callback) callback();
         });
@@ -184,7 +220,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         }, function(res) {
             $scope.users = [];
             $loading.finish('users');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
 
             if(callback) callback();
         });
@@ -275,7 +310,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $loading.finish('transactions');
         }).catch(function(res) {
             $loading.finish('transactions');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
         });
     }
 
@@ -349,7 +383,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('users');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             toastr.info("Ingreso de usuario cancelado");
@@ -384,7 +417,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('clients');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             toastr.info("Ingreso de cliente cancelado");
@@ -410,7 +442,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             }
         }, function(res) {
             $loading.finish('clients');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
         });
     }
 
@@ -442,7 +473,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('users');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             })
         }, function () {
             toastr.info("Edición de usuario cancelada");
@@ -478,7 +508,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('clients');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             })
         }, function () {
             toastr.info("Edición de cliente cancelada");
@@ -513,7 +542,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('users');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             toastr.info("Restablecimiento de contraseña cancelado");
@@ -562,7 +590,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('clients');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             //
@@ -593,7 +620,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
                 }
             }, function(res) {
                 $loading.finish('users');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             //
@@ -662,12 +688,11 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.responseCollapsed = true;
             $scope.response = undefined;
             $loading.finish('lastCbte');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
         });
     }
 }]);
 
-app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'TEXT_ERRORS', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, TEXT_ERRORS) {
+app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading) {
     $scope.permissions = [];
     $scope.clients = angular.copy($scope.$parent.clients);
     $scope.user = angular.copy($scope.$parent.user);
@@ -738,7 +763,6 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
                 }
             }, function(res) {
                 $loading.finish('permissions');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             toastr.info("Ingreso de permiso cancelado");
@@ -773,7 +797,6 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
                 }
             }, function(res) {
                 $loading.finish('permissions');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             })
         }, function () {
             toastr.info("Edición de permiso cancelada");
@@ -804,7 +827,6 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
                 }
             }, function(res) {
                 $loading.finish('permissions');
-                toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             });
         }, function () {
             //
@@ -825,7 +847,6 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
             }
         }, function(res) {
             $loading.finish('permissions');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
         });
     };
 
@@ -861,27 +882,26 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
         $loading.start('login');
 
         $http.post('/api/login', $scope.formData)
-            .then(function(res) {
-            $loading.finish('login');   
+            .then(function(res) { 
 
             if(res.data.result) {
-                $localStorage.currentUser = {
-                    token: res.data.token
-                }
+                $localStorage.jwt = res.data.token;
 
                 $rootScope.loggedIn = true;
 
                 $http.defaults.headers.common.Authorization = res.data.token;
 
-                $location.path('dashboard');
-                toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
+                $timeout(function() {
+                    $loading.finish('login');  
+                    toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
+                    $location.path('dashboard');
+                }, 1000);
             } else {
                 toastr.error(res.data.err);
                 vcRecaptchaService.reload($scope.widgetId);
             }
         }, function(res) {
             $loading.finish('login');
-            toastr.error(res.data || TEXT_ERRORS.ERR_API_CONNECTION);
             vcRecaptchaService.reload($scope.widgetId);
         });
     }

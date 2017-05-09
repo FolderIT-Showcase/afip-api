@@ -756,7 +756,8 @@ class Endpoints {
 		if (token) {
 			jwt.verify(token, global.tokenSecret, function (err, decoded) {
 				if (err) {
-					return res.json({ result: false, err: "No se pudo autenticar el token." });
+					logger.error(err);
+					return res.status(401).send("No se pudo autenticar el token.");
 				} else {
 					req.decoded = decoded;
 					next();
@@ -770,10 +771,10 @@ class Endpoints {
 				username: req.body.username
 			}).then(function (user) {
 				if (!user)
-					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 				if (user.password != md5(req.body.password))
-					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 				req.decoded = {
 					"_doc": user
@@ -784,7 +785,7 @@ class Endpoints {
 				return res.json({ result: false, err: err.message });
 			});
 		} else {
-			return res.status(403).send("Error en autenticación");
+			return res.status(401).send("Error en autenticación");
 		}
 	}
 
