@@ -27,19 +27,18 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
             var toastr = $injector.get('toastr');
 
             if (config.url.match('api/') && !config.url.match('api/login') && (!$localStorage.jwt || jwtHelper.isTokenExpired($localStorage.jwt))) {
-                config.timeout = 0;
                 $localStorage.jwt = '';
                 $rootScope.loggedIn = false;
-                
+
                 config.timeout = 0;
                 config.aborted = true;
             }
-            
+
             return config || $q.when(config);
         },
         responseError: function(rejection) {
             var toastr = $injector.get('toastr');
-            
+
             if (rejection.aborted) {
                 toastr.warning("Su sesión ha expirado. Por favor, reingrese al sistema.");
                 canceller.resolve('Session Expired');
@@ -891,11 +890,9 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
 
                 $http.defaults.headers.common.Authorization = res.data.token;
 
-                $timeout(function() {
-                    $loading.finish('login');  
-                    toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
-                    $location.path('dashboard');
-                }, 1000);
+                $loading.finish('login');  
+                toastr.success("¡Bienvenido al nuevo sistema de Facturación Electrónica!");
+                $location.path('dashboard');
             } else {
                 toastr.error(res.data.err);
                 vcRecaptchaService.reload($scope.widgetId);
