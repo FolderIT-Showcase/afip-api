@@ -902,7 +902,7 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
                 $location.path('dashboard');
             } else {
                 toastr.error(res.data.err);
-                vcRecaptchaService.reload($scope.widgetId);
+                //vcRecaptchaService.reload($scope.widgetId);
             }
         }, function(res) {
             $loading.finish('login');
