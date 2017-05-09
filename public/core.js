@@ -19,6 +19,20 @@ app.service('TEXT_ERRORS', [function() {
     this.ERR_API_CONNECTION = "Error de conexión a la API";
 }]);
 
+app.run(['$rootScope', '$http', '$localStorage', '$loading', 'jwtHelper', '$location', function($rootScope, $http, $localStorage, $loading, jwtHelper, $location) {
+    $loading.setDefaultOptions({
+        text: 'Cargando...',
+        fps: 60
+    });
+    
+    if ($localStorage.jwt) {
+        $rootScope.loggedIn = true;
+        $http.defaults.headers.common.Authorization = $localStorage.jwt;
+    } else {
+        $rootScope.loggedIn = false;
+    }
+}]);
+
 app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHelper', '$injector', '$rootScope', 'TEXT_ERRORS', function ($q, $location, $localStorage, jwtHelper, $injector, $rootScope, TEXT_ERRORS) {
     var canceller = $q.defer();
 
@@ -27,7 +41,7 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
             var toastr = $injector.get('toastr');
 
             if (config.url.match('api/') && !config.url.match('api/login') && (!$localStorage.jwt || jwtHelper.isTokenExpired($localStorage.jwt))) {
-                $localStorage.jwt = '';
+                $localStorage.jwt = undefined;
                 $rootScope.loggedIn = false;
 
                 config.timeout = 0;
@@ -62,13 +76,6 @@ app.config(function ($provide, $httpProvider) {
     $httpProvider.interceptors.push('httpAbortInterceptor');
 });
 
-app.run(['$rootScope', '$http', '$localStorage', '$loading', 'jwtHelper', '$location', function($rootScope, $http, $localStorage, $loading, jwtHelper, $location) {
-    $loading.setDefaultOptions({
-        text: 'Cargando...',
-        fps: 60
-    });
-}]);
-
 app.controller('MainController', ['$scope', function($scope) {    
 
 }]);
@@ -77,7 +84,7 @@ app.controller('NavbarController', ['$scope', '$rootScope', '$localStorage', '$l
     $scope.isCollapsed = true;
 
     $scope.logout = function() {
-        $localStorage.currentUser = undefined;
+        $localStorage.jwt = undefined;
         $location.path('/');
         $rootScope.loggedIn = false;
         toastr.success("Salida del sistema exitosa");
@@ -853,7 +860,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
 }]);
 
 app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location', '$localStorage', 'toastr', '$loading', 'vcRecaptchaService', function($scope, $rootScope, $http, $location, $localStorage, toastr, $loading, vcRecaptchaService) {    
-    if ($localStorage.currentUser) {
+    if ($localStorage.jwt) {
         $location.path('dashboard');
     }
 
