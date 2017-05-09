@@ -12,7 +12,6 @@ var _ = require('lodash'),
 	_ = require('lodash'),
 	fs = require('fs'),
 	path = require('path'),
-	request = require('request'),
 	config = require('./../../config'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 

@@ -13,6 +13,7 @@
     "mongoose": "^4.9.3",
     "ntp-client": "^0.5.3",
     "openssl-wrapper": "^0.3.4",
+    "request": "^2.81.0",
     "serve-favicon": "^2.4.2",
     "strong-soap": "^1.2.3",
     "toobusy-js": "^0.5.1",
@@ -25,8 +26,6 @@
     "npm": ">=2.0.0"
   },
   "scripts": {
-    "postinstall": "winser -i -s -c",
-    "preuninstall": "winser -r -x -s",
     "start": "node ./server.js"
   },
   "directories": {
