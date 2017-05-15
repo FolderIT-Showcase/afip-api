@@ -146,8 +146,7 @@ class Tokens {
 				var tomorrow = new Date();
 
 				tomorrow.setDate(date.getDate() + 1);
-
-				tomorrow.setMinutes(date.getMinutes());
+				tomorrow.setHours(date.getHours() - 1);
 
 				var data = [{
 					loginTicketRequest: [
@@ -175,7 +174,7 @@ class Tokens {
 	}
 
 	generateToken(code, type, service, refresh = false) {
-		// Parse some of the Services
+		// Parsear servicios con códigos específicos
 		if (service == 'wsfev1') {
 			service = 'wsfe';
 		}
@@ -184,6 +183,8 @@ class Tokens {
 			service = 'wsfex';
 		}
 
+		var client;
+
 		return new Promise((resolve, reject) => {
 			this.getToken(code, type, service).then((token) => {
 				if (token) {
@@ -191,47 +192,46 @@ class Tokens {
 				} else {
 					logger.info("Generando token...", code);
 
-					this.createClient(type).then((client) => {
-						this.generateCMS(code, service).then((data) => {
-							client.loginCms({
-								in0: data
-							}, (err, result, raw, soapHeader) => {
-								this.parseXML(raw).then((res) => {
-									var body = res.envelope.body;
+					this.createClient(type).then((newClient) => {
+						client = newClient;
+						return this.generateCMS(code, service);
+					}).then((data) => {
+						client.loginCms({
+							in0: data
+						}, (err, result, raw, soapHeader) => {
+							this.parseXML(raw).then((res) => {
+								var body = res.envelope.body;
 
-									var xml_response = body.logincmsresponse ? res.envelope.body.logincmsresponse.logincmsreturn : undefined;
+								var xml_response = body.logincmsresponse ? res.envelope.body.logincmsresponse.logincmsreturn : undefined;
 
-									if (xml_response) {
-										this.parseXML(xml_response).then((res) => {
-											var credentials = res.loginticketresponse.credentials;
+								if (xml_response) {
+									this.parseXML(xml_response).then((res) => {
+										var credentials = res.loginticketresponse.credentials;
 
-											var Tokens = mongoose.model('Tokens');
+										var Tokens = mongoose.model('Tokens');
 
-											var token = new Tokens({
-												code: code,
-												type: type,
-												service: service,
-												credentials: credentials,
-												since: moment().format(),
-												until: moment().add(12, "hours").format()
-											});
-
-											token.save().then((token) => {
-												resolve(token.credentials)
-											}, (err) => {
-												reject(err);
-											});
-										}).catch(reject);
-									} else {
-										reject({
-											fault: body.fault,
-											message: body.fault.faultstring
+										var newToken = new Tokens({
+											code: code,
+											type: type,
+											service: service,
+											credentials: credentials,
+											since: moment().format(),
+											until: moment().add(22, "hours").format()
 										});
-									}
-								});
+
+										return newToken.save();
+									}).then((newToken) => {
+										resolve(newToken.credentials)
+									}).catch(reject);
+								} else {
+									reject({
+										fault: body.fault,
+										message: body.fault.faultstring
+									});
+								}
 							});
-						}).catch(reject);
-					});
+						});
+					}).catch(reject);
 				}
 			}).catch(reject);
 		});

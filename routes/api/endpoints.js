@@ -395,7 +395,6 @@ class Endpoints {
 
 			res.json(resObj);
 		}).catch((err) => {
-			logger.error(err);
 			res.json({
 				result: false,
 				err: err.message
