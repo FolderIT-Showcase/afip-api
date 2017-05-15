@@ -147,8 +147,6 @@ class Endpoints {
 			};
 
 			if (!resObj.data.CAE || !resObj.data.CAEFchVto || !resObj.data.CbteFch) {
-				logger.debug(result);
-
 				var errs = '';
 				var obs = [result.FEXErr];
 
@@ -266,8 +264,6 @@ class Endpoints {
 			};
 
 			if (!resObj.data.CAE || !resObj.data.CAEFchVto || !resObj.data.CbteFch) {
-				logger.debug(result);
-
 				var errs = '';
 				var obs = [];
 				if (response.Observaciones && response.Observaciones.Obs) {
@@ -788,7 +784,6 @@ class Endpoints {
 	}
 
 	login(req, res) {
-		logger.debug(req.body);
 		var Users = mongoose.model('Users');
 
 		if (!req.body.rcResponse) {
