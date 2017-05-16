@@ -4,10 +4,22 @@
     </div>
     <div class="modal-body" id="modal-body" dw-loading="client">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-4">
                 <div class="form-group">
                     <label for="name">Nombre</label>
                     <input type="text" id="name" class="form-control" placeholder="Nombre" required="" autofocus="" ng-model="client.name">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="razonSocial">Razón Social</label>
+                    <input type="text" id="razonSocial" class="form-control" placeholder="Razón Social" required="" autofocus="" ng-model="client.razonSocial">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="Email" required="" autofocus="" ng-model="client.email">
                 </div>
             </div>
             <div class="col-md-4">
@@ -46,6 +58,7 @@
                 <div class="form-group">
                     <label for="csr">CSR</label>
                     <textarea id="csr" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.csr"></textarea>
+                    <button class="btn btn-short btn-primary form-control" ng-click="saveCSR(client)" ng-href="{{ fileCSR }}">Descargar CSR</button>
                 </div>
             </div>
         </div>
