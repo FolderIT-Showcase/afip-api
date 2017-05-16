@@ -40,8 +40,12 @@ class Tokens {
 		});
 	}
 
-	getToken(code, type, service) {
+	getToken(code, type, service, refresh) {
 		return new Promise((resolve, reject) => {
+			if (refresh === true) {
+				return resolve(undefined);
+			}
+
 			var Tokens = mongoose.model('Tokens');
 
 			Tokens.findOne({
@@ -50,6 +54,8 @@ class Tokens {
 				service: service,
 				since: { $lte: moment().format() },
 				until: { $gte: moment().format() }
+			}).sort({
+				since: -1
 			}).then(function (token) {
 				if (!token)
 					resolve(undefined)
@@ -142,19 +148,25 @@ class Tokens {
 
 	generateCMS(code, service) {
 		return new Promise((resolve, reject) => {
+			var dates;
 			this.getCurrentTime().then((date) => {
 				var tomorrow = new Date();
 
 				tomorrow.setDate(date.getDate() + 1);
 				tomorrow.setHours(date.getHours() - 1);
 
+				dates = {
+					generationTime: this.formatDate(date),
+					expirationTime: this.formatDate(tomorrow)
+				};
+
 				var data = [{
 					loginTicketRequest: [
 						{ _attr: { version: '1.0' } }, {
 							header: [
 								{ uniqueId: moment().format('X') },
-								{ generationTime: this.formatDate(date) },
-								{ expirationTime: this.formatDate(tomorrow) }
+								{ generationTime: dates.generationTime },
+								{ expirationTime: dates.expirationTime }
 							]
 						}, {
 							service: service
@@ -168,7 +180,12 @@ class Tokens {
 				// if (validationErrors)
 				// 	logger.error(validationErrors)
 
-				this.encryptXML(code, xml).then(resolve).catch(reject);
+				return this.encryptXML(code, xml);
+			}).then((in0) => {
+				resolve({
+					in0: in0,
+					dates: dates
+				});
 			}).catch(reject);
 		});
 	}
@@ -186,18 +203,18 @@ class Tokens {
 		var client;
 
 		return new Promise((resolve, reject) => {
-			this.getToken(code, type, service).then((token) => {
+			this.getToken(code, type, service, refresh).then((token) => {
 				if (token) {
-					resolve(token.credentials);
+					resolve(token);
 				} else {
 					logger.info("Generando token...", code);
 
 					this.createClient(type).then((newClient) => {
 						client = newClient;
 						return this.generateCMS(code, service);
-					}).then((data) => {
+					}).then((cms) => {
 						client.loginCms({
-							in0: data
+							in0: cms.in0
 						}, (err, result, raw, soapHeader) => {
 							this.parseXML(raw).then((res) => {
 								var body = res.envelope.body;
@@ -215,13 +232,13 @@ class Tokens {
 											type: type,
 											service: service,
 											credentials: credentials,
-											since: moment().format(),
-											until: moment().add(22, "hours").format()
+											since: cms.dates.generationTime,
+											until: cms.dates.expirationTime
 										});
 
 										return newToken.save();
 									}).then((newToken) => {
-										resolve(newToken.credentials)
+										resolve(newToken)
 									}).catch(reject);
 								} else {
 									reject({
