@@ -5,6 +5,8 @@ var mongoose = require('mongoose'),
 var ClientsSchema = new Schema({
     code: String,
     name: String,
+    razonSocial: String,
+    email: String,
     cuit: String,
     signer: String,
     key: String,
