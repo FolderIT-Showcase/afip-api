@@ -1,0 +1,37 @@
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body" dw-loading="regenTokens">
+    <form name="regenTokensForm">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="service">Servicio</label>
+                    <input type="text" class="form-control" ng-model="formData.service" uib-typeahead="sv.Id as sv.Desc for sv in services | filter:$viewValue | limitTo:8"
+                           typeahead-show-hint="true"
+                           typeahead-min-length="0"
+                           typeahead-editable="false"
+                           typeahead-input-formatter="formatService($model)">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-primary" ng-disabled="regenTokensForm.$invalid" ng-click="regenTokensGet(formData)">Regenerar</button>
+            </div>
+        </div>
+    </form>
+    <div class="row">
+        <hr ng-show="!responseCollapsed">
+    </div>
+    <div uib-collapse="responseCollapsed">
+        <uib-accordion close-others="false">
+            <div uib-accordion-group class="panel-default" heading="Sign">
+                <p>{{credentials.sign}}</p></div>
+            <div uib-accordion-group class="panel-default" heading="Token">
+                <p>{{credentials.token}}</p></div>
+        </uib-accordion>
+        <p>Expiración: <strong>{{credentials.expiration}}</strong></p>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" type="button" ng-click="$dismiss()">Cerrar</button>
+</div>

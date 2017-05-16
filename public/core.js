@@ -107,6 +107,13 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         Desc: "Homologación"
     }];
     $scope.CbteTipo = [];
+    $scope.services = [{
+        Id: "wsfe",
+        Desc: "Facturación Electrónica (WSFE)"
+    }, {
+        Id: "wsfex",
+        Desc: "Facturación Electrónica de Exportación (WSFEX)"
+    }];
 
     $scope.vmC = {
         dtOptions: DTOptionsBuilder.newOptions()
@@ -243,6 +250,14 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         for (var i=0; i < $scope.CbteTipo.length; i++) {
             if (code === $scope.CbteTipo[i].Id) {
                 return $scope.CbteTipo[i].Desc;
+            }
+        }
+    };
+
+    $scope.formatService = function(code) {
+        for (var i=0; i < $scope.services.length; i++) {
+            if (code === $scope.services[i].Id) {
+                return $scope.services[i].Desc;
             }
         }
     };
@@ -484,6 +499,41 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         });
     };
 
+    $scope.genRSA = function(client) {
+        $scope.modalTitle = "Confirme la generación del certificado"
+        $scope.modalBody = "Esta acción eliminará el certificado actual y regenerará la <strong>Key</strong> y <strong>CSR</strong> del cliente.";
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/confirm.html'
+        });
+
+        modalInstance.result.then(function () {
+            $loading.start('clients');
+
+            $http.post('/api/genRSA', client)
+                .then(function(res) {
+                $loading.finish('clients');
+
+                if (res.data.result) {
+                    client = res.data.data;
+                    var i = _.findIndex($scope.clients, { _id: client._id });
+                    if(i >= 0) $scope.clients[i] = angular.copy(client);
+                    toastr.success("Solicitud de certificado generada con éxito.");
+                    toastr.info("Por favor, recuerde regenerar los Tickets de Acceso a los servicios pertinentes.");
+                    $scope.editClient(client);
+                } else {
+                    toastr.error(res.data.err);
+                }
+            }, function(res) {
+                $loading.finish('clients');
+            });
+        }, function () {
+            //
+        });
+    };
+
     $scope.editClient = function(client) {
         $scope.client = angular.copy(client);
         $scope.modalTitle = "Editar Cliente: " + client.name
@@ -643,6 +693,57 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             });
         }, function () {
             //
+        });
+    }
+
+    $scope.regenTokens = function(client) {
+        $scope.credentials = {};
+        $scope.formData = {
+            code: client.code
+        };
+        $scope.modalTitle = "Regenerar Tickets de Acceso: " + client.code;
+        $scope.responseCollapsed = true;
+        $scope.response = undefined;
+
+        var modalInstance = $uibModal.open({
+            backdrop: 'static',
+            scope: $scope,
+            templateUrl: 'views/modals/regenTokens.html'
+        });
+
+        modalInstance.result.then(function() {   
+        }, function() {
+        });
+
+        modalInstance.rendered.then(function() {
+        });
+    }
+
+    $scope.regenTokensGet = function(formData) {
+        $loading.start('regenTokens');
+
+        $http.get('/api/' + formData.service + '/' + formData.code + '/refresh/token').then(function(res) {
+            $loading.finish('regenTokens');
+
+            if (res.data.result) {
+                $scope.credentials = {
+                    sign: res.data.data.credentials.sign,
+                    token: res.data.data.credentials.token,
+                    expiration: moment(res.data.data.until).format('DD/MM/YYYY HH:mm')
+                };
+
+                $scope.responseCollapsed = false;
+            } else {
+                $scope.responseCollapsed = true;
+                $scope.credentials = {};
+                $scope.response = undefined;
+                toastr.error(res.data.err);
+            }
+        }).catch(function(res) {
+            $scope.responseCollapsed = true;
+            $scope.credentials = {};
+            $scope.response = undefined;
+            $loading.finish('regenTokens');
         });
     }
 

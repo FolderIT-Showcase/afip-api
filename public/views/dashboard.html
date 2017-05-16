@@ -27,7 +27,8 @@
                                     <button class="btn btn-primary" uib-tooltip="Más acciones..." uib-dropdown-toggle><span class="glyphicon glyphicon-menu-hamburger"></span></button>
                                     <ul class="dropdown-menu" uib-dropdown-menu>
                                         <li class="disabled"><a href="">Factura Manual</a></li>
-                                        <li class="disabled"><a href="">Generar Certificado</a></li>
+                                        <li><a href="" ng-click="regenTokens(client)">Regenerar Tickets de Acceso</a></li>
+                                        <li><a href="" ng-click="genRSA(client)">Generar Solicitud de Certificado</a></li>
                                         <li class="divider"></li>
                                         <li><a href="" ng-click="viewTransactions(client)">Ver Transacciones</a></li>
                                         <li><a href="" ng-click="lastCbte(client)">Ver Último Comprobante...</a></li>
