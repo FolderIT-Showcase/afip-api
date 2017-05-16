@@ -4,7 +4,8 @@
 </div>
 -->
 <div class="modal-body" id="modal-body">
-    <h3>Confirme la eliminación del registro</h3>
+    <h3 ng-bind-html="modalTitle"></h3>
+    <p ng-bind-html="modalBody"></p>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" type="button" ng-click="$close()">OK</button>

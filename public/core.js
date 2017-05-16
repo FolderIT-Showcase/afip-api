@@ -240,7 +240,6 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     reload();
 
     $scope.formatCbteTipo = function(code) {
-        console.log($scope.CbteTipo);
         for (var i=0; i < $scope.CbteTipo.length; i++) {
             if (code === $scope.CbteTipo[i].Id) {
                 return $scope.CbteTipo[i].Desc;
@@ -520,6 +519,15 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         });
     };
 
+    $scope.saveCSR = function(client) {
+        $scope.fileCSR = client.csr;
+        var blob = new Blob([$scope.fileCSR], { type:"text/plain;charset=utf-8;" });			
+        var downloadLink = angular.element('<a></a>');
+        downloadLink.attr('href',window.URL.createObjectURL(blob));
+        downloadLink.attr('download', client.code + '_' + moment().format("YYYYMMDD-HHmm") + '_.csr');
+        downloadLink[0].click();
+    };
+
     $scope.resetPassword = function(user) {
         $scope.user = angular.copy(user);
         $scope.modalTitle = "Restablecer Contraseña: " + user.name
@@ -573,6 +581,9 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     };
 
     $scope.removeClient = function(client) {
+        $scope.modalTitle = "Confirme la eliminación del cliente: <strong>" + client.code + "</strong>";
+        $scope.modalBody = "";
+
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
@@ -603,6 +614,9 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     }
 
     $scope.removeUser = function(user) {
+        $scope.modalTitle = "Confirme la eliminación del usuario: <strong>" + user.username + "</strong>";
+        $scope.modalBody = "";
+
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
@@ -810,6 +824,10 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
     };
 
     $scope.removePermit = function(permit) {
+        $scope.modalTitle = "Confirme la eliminación del permiso";
+        $scope.modalBody = "Usuario: <strong>" + permit.username + "</strong><br/>";
+        $scope.modalBody += "Cliente: <strong>" + permit.code + "</strong><br/>";
+
         var modalInstance = $uibModal.open({
             backdrop: 'static',
             scope: $scope,
