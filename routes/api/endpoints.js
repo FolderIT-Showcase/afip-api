@@ -13,6 +13,7 @@ var _ = require('lodash'),
 	fs = require('fs'),
 	path = require('path'),
 	config = require('./../../config'),
+	auth = require('basic-auth'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 
 class Endpoints {
@@ -747,28 +748,19 @@ class Endpoints {
 		var username = req.body.username || req.query.username || req.headers['username'];
 		var password = req.body.password || req.query.password || req.headers['password'];
 
-		if (token) {
-			jwt.verify(token, global.tokenSecret, function (err, decoded) {
-				if (err) {
-					logger.error(err);
-					return res.status(401).send("No se pudo autenticar el token.");
-				} else {
-					req.decoded = decoded;
-					next();
-				}
-			});
-		} else if (username && password) {
-			//Verificar username+password
+		var verifyUser = function (username, password) {
+			logger.debug(username, password);
+
 			var Users = mongoose.model('Users');
 
 			Users.findOne({
-				username: req.body.username
+				username: username
 			}).then(function (user) {
 				if (!user)
-					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
+					return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
-				if (user.password != md5(req.body.password))
-					return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
+				if (user.password != md5(password))
+					return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 				req.decoded = {
 					"_doc": user
@@ -776,10 +768,37 @@ class Endpoints {
 
 				next();
 			}, function (err) {
-				return res.json({ result: false, err: err.message });
+				return res.status(500).json({ result: false, err: err.message });
 			});
+		}
+
+		if (token) {
+			jwt.verify(token, global.tokenSecret, function (err, decoded) {
+				if (err) {
+					//Verificar si es un token de Basic Auth
+					var user = auth(req);
+					if (user) {
+						verifyUser(user.name, user.pass);
+					} else {
+						logger.error(err);
+						return res.status(401).json({
+							result: false,
+							err: "No se pudo autenticar."
+						});
+					}
 		} else {
-			return res.status(401).send("Error en autenticación");
+					req.decoded = decoded;
+					next();
+				}
+			});
+		} else if (username && password) {
+			//Verificar username+password
+			verifyUser(username, password);
+		} else {
+			return res.status(401).json({
+				result: false,
+				err: "Por favor provea los datos para la autenticación."
+			});
 		}
 	}
 
