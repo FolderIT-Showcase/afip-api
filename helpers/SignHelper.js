@@ -19,13 +19,13 @@ function sign(options) {
         options = options || {};
 
         if (!options.content)
-            reject({ message: 'Invalid content.' });
+            reject({ message: 'Falta completar el contenido del mensaje a firmar.' });
 
         if (!options.key)
-            reject({ message: 'Invalid key.' });
+            reject({ message: 'Falta completar la Key del certificado.' });
 
         if (!options.cert)
-            reject({ message: 'Invalid certificate.' });
+            reject({ message: 'Falta completar los dtos del certificado (formato PEM).' });
 
         var content = new Buffer(options.content);
 
