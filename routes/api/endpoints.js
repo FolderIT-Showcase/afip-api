@@ -5,6 +5,7 @@ var _ = require('lodash'),
 	request = require('request'),
 	WSAA = require('../../helpers/wsaa'),
 	AfipURLs = require('../../helpers/urls'),
+	SignHelper = require('../../helpers/SignHelper'),
 	mongoose = require('mongoose'),
 	md5 = require('md5'),
 	jwt = require('jsonwebtoken'),
@@ -30,7 +31,9 @@ class Endpoints {
 
 		app.post('/api/lastCbte', this.lastCbte.bind(this));
 
-		app.post('/api/:service/:code/refresh/token', this.recreate_token.bind(this));
+		app.get('/api/:service/:code/refresh/token', this.recreate_token.bind(this));
+
+		// app.get('/api/:code/flush/tokens', this.flush_tokens.bind(this));
 
 		app.post('/api/:service/:endpoint', this.endpoint.bind(this));
 
@@ -39,6 +42,8 @@ class Endpoints {
 		app.post('/api/generarCaex', this.generar_caex.bind(this));
 
 		app.get('/api/cbteTipo/:code', this.getCbteTipo.bind(this));
+
+		app.post('/api/genRSA', this.genRSA.bind(this));
 
 		//Verificación de permisos administrativos
 		app.use(this.administrative.bind(this));
@@ -362,6 +367,43 @@ class Endpoints {
 		});
 	}
 
+	genRSA(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
+		var code = req.body.code;
+		var client;
+
+		this.validate_username(username, code).then((permit) => {
+			return this.validate_client(code);
+		}).then((validatedClient) => {
+			client = validatedClient;
+
+			var options = {
+				company: client.razonSocial,
+				email: client.email,
+				domain: client.code,
+				cuit: client.cuit,
+			}
+
+			return SignHelper.gencsr(options);
+		}).then((keys) => {
+			client.signer = '';
+			client.key = keys.key;
+			client.csr = keys.csr;
+
+			return client.save();
+		}).then((client) => {
+			res.json({
+				result: true,
+				data: client
+			});
+		}).catch((err) => {
+			res.json({
+				result: false,
+				message: err.message
+			});
+		});
+	}
+
 	getCbteTipo(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
 		var code = req.params.code;
@@ -535,25 +577,18 @@ class Endpoints {
 
 	recreate_token(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
-		var service = req.body.service;
+		var code = req.params.code;
+		var service = req.params.service;
 
 		this.validate_username(username, code).then((permit) => {
 			return this.validate_client(code);
 		}).then((client) => {
-			var type = client.type;
-
-			WSAA.generateToken(code, type, service)
-				.then((tokens) => res.json({
-					result: true,
-					data: tokens
-				}))
-				.catch((err) => {
-					res.json({
-						result: false,
-						err: err.message
-					});
-				});
+			return WSAA.generateToken(code, client.type, service, true);
+		}).then((token) => {
+			res.json({
+				result: true,
+				data: token
+			});
 		}).catch((err) => {
 			res.json({
 				result: false,
@@ -585,7 +620,8 @@ class Endpoints {
 
 				return WSAA.generateToken(code, type, service);
 			}).then((newTokens) => {
-				tokens = newTokens;
+				tokens = newTokens.credentials;
+
 				return this.createClientForService(type, version, service, endpoint);
 			}).then((soapClient) => {
 				var afipRequest = {}
@@ -661,7 +697,7 @@ class Endpoints {
 
 			return WSAA.generateToken(code, type, service);
 		}).then((newTokens) => {
-			tokens = newTokens;
+			tokens = newTokens.credentials;
 
 			return this.createClientForService(type, version, service, endpoint);
 		}).then((soapClient) => {
@@ -726,7 +762,7 @@ class Endpoints {
 
 			return WSAA.generateToken(code, type, service);
 		}).then((newTokens) => {
-			tokens = newTokens;
+			tokens = newTokens.credentials;
 
 			return this.createClientForService(type, version, service, endpoint);
 		}).then((soapClient) => {
@@ -786,7 +822,7 @@ class Endpoints {
 							err: "No se pudo autenticar."
 						});
 					}
-		} else {
+				} else {
 					req.decoded = decoded;
 					next();
 				}
