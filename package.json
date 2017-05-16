@@ -4,6 +4,7 @@
   "description": "Sistema de utilización simplificada de servicios web publicados por AFIP",
   "dependencies": {
     "app-root-path": "^2.0.1",
+    "basic-auth": "^1.1.0",
     "body-parser": "^1.15.2",
     "cors": "*",
     "csr-gen": "^0.2.1",
