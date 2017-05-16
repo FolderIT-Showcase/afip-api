@@ -61,3 +61,12 @@ div.dataTables_info {
     white-space: nowrap;
     width: 1%;
 }
+
+.btn-short {
+    height: 24px;
+    padding: 0px 12px;
+}
+
+.panel-collapse p {
+    word-wrap: break-word;
+}
