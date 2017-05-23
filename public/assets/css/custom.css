@@ -9,6 +9,11 @@ body {
     background-color: white;
 }
 
+.gi-2x{font-size: 2em;}
+.gi-3x{font-size: 3em;}
+.gi-4x{font-size: 4em;}
+.gi-5x{font-size: 5em;}
+
 .dt-buttons {
     float: right;
     margin-right: 10px;
@@ -69,4 +74,28 @@ div.dataTables_info {
 
 .panel-collapse p {
     word-wrap: break-word;
+}
+
+.drop-zone {
+    border: 4px dashed #9E9E9E;
+    min-height: 200px;
+    background-color: #fff;
+    color: #9E9E9E;
+    overflow: hidden;
+    -webkit-transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -ms-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+    font-size: 1.5em;
+    text-align: center;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.nv-file-over {
+    border: 4px dashed #5f8ab9;
+    color: #5f8ab9;
 }

@@ -1,6 +1,7 @@
 var _ = require('lodash'),
 	cors = require('cors'),
-	bodyParser = require('body-parser');
+	bodyParser = require('body-parser'),
+	fileUpload = require('express-fileupload');
 
 // Setup Route Bindings
 exports = module.exports = function (app) {
@@ -9,6 +10,7 @@ exports = module.exports = function (app) {
 	// Add Middlewares
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: true }));
+	app.use(fileUpload());
 
 	// Inicialización del Frontend
 	app.get('/', function (req, res) {

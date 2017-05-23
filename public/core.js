@@ -9,6 +9,7 @@ var app = angular.module('node-fe', [
     'vcRecaptcha',
     'angular-jwt',
     'darthwade.dwLoading',
+    'angularFileUpload',
     'ui.bootstrap',
     'datatables',
     'datatables.bootstrap',
@@ -95,7 +96,10 @@ app.controller('ReportingController', ['$scope', function($scope) {
 
 }]);
 
-app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading) {
+app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'FileUploader', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, FileUploader) {
+    var uploader = $scope.uploader = new FileUploader();
+    uploader.url = "/api/upload/signer";
+    
     $scope.clients = [];
     $scope.users = [];
     $scope.client = {};
@@ -191,8 +195,31 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
         ]
     };
+    
+    uploader.onAfterAddingFile = function(fileItem) {
+        $loading.start('uploadSigner');
+        fileItem.upload();
+    };
+    uploader.onSuccessItem = function(fileItem, response, status, headers) {
+        if (response.result) {
+            $scope.client.signer = response.data;
+            $scope.dndSigner = false;
+        } else {
+            toastr.error(response.err);
+        }
+    };
+    uploader.onErrorItem = function(fileItem, response, status, headers) {
+        toastr.error("Ocurrió un error al intentar procesar el certificado. Por favor, intente nuevamente.");
+    };
+    uploader.onCompleteAll = function() {
+        $loading.finish('uploadSigner');
+    };
+    
+    $scope.toggleSigner = function() {
+        $scope.dndSigner = !$scope.dndSigner;
+    }
 
-    $scope.getClients = function(callback) {
+    $scope.getClients = function(next) {
         $loading.start('clients');
 
         $http.get('/api/getClients')
@@ -201,21 +228,18 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
             if(res.data.result) {
                 $scope.clients = res.data.data;
+                if(next) next();
             } else {
                 $scope.clients = [];
                 toastr.error(res.data.err);
             }
-
-            if(callback) callback();
         }, function(res) {
             $scope.clients = [];
             $loading.finish('clients');
-
-            if(callback) callback();
         });
     }
 
-    $scope.getUsers = function(callback) {
+    $scope.getUsers = function(next) {
         $loading.start('users');
 
         $http.get('/api/getUsers')
@@ -224,17 +248,14 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
 
             if(res.data.result) {
                 $scope.users = res.data.data;
+                if(next) next();
             } else {
                 $scope.users = [];
                 toastr.error(res.data.err);
             }
-
-            if(callback) callback();
         }, function(res) {
             $scope.users = [];
             $loading.finish('users');
-
-            if(callback) callback();
         });
     }
 
@@ -331,7 +352,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         }).catch(function(res) {
             $loading.finish('transactions');
         });
-    }
+    };
 
     $scope.viewTransactions = function(client) {
         $scope.client = client;
@@ -410,6 +431,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     };
 
     $scope.newClient = function() {
+        $scope.dndSigner = true;
         $scope.client = {};
         $scope.modalTitle = "Nuevo Cliente"
 
@@ -535,6 +557,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     };
 
     $scope.editClient = function(client) {
+        $scope.dndSigner = false;
         $scope.client = angular.copy(client);
         $scope.modalTitle = "Editar Cliente: " + client.name
 
@@ -574,7 +597,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         var blob = new Blob([$scope.fileCSR], { type:"text/plain;charset=utf-8;" });			
         var downloadLink = angular.element('<a></a>');
         downloadLink.attr('href',window.URL.createObjectURL(blob));
-        downloadLink.attr('download', client.code + '_' + moment().format("YYYYMMDD-HHmm") + '_.csr');
+        downloadLink.attr('download', (client.code ? client.code + '_' : '') + moment().format("YYYY-MM-DD_HH-mm") + '.csr');
         downloadLink[0].click();
     };
 

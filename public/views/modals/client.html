@@ -43,9 +43,23 @@
                 </div>
             </div>
             <div class="col-md-12">
-                <div class="form-group">
+                <div class="form-group" dw-loading="uploadSigner">
                     <label for="signer">Certificado</label>
-                    <textarea id="signer" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.signer"></textarea>
+                    <button type="button" class="btn btn-short btn-primary form-control" ng-click="toggleSigner()">{{dndSigner?"Carga Manual":"Subir Certificado"}}</button>
+                    <div uib-collapse="!dndSigner">
+                        <!--                        <input type="file" nv-file-select="" uploader="uploader"/><br/>-->
+                        <div nv-file-drop="" uploader="uploader">
+                            <div nv-file-over="" uploader="uploader" class="well drop-zone">
+                                <div>
+                                    <span class="glyphicon glyphicon-cloud-upload gi-3x"></span>
+                                    <p>Arrastre aquí el Certificado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div uib-collapse="dndSigner">
+                        <textarea id="signer" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.signer"></textarea>
+                    </div>
                 </div>
             </div>
             <div class="col-md-12">
@@ -58,7 +72,9 @@
                 <div class="form-group">
                     <label for="csr">CSR</label>
                     <textarea id="csr" class="form-control vresize monospace" rows="5" autofocus="" ng-model="client.csr"></textarea>
-                    <button class="btn btn-short btn-primary form-control" ng-click="saveCSR(client)" ng-href="{{ fileCSR }}">Descargar CSR</button>
+                    <div uib-collapse="!client.csr">
+                        <button type="button" class="btn btn-short btn-primary form-control" ng-click="saveCSR(client)" ng-href="{{ fileCSR }}">Descargar CSR</button>
+                    </div>
                 </div>
             </div>
         </div>

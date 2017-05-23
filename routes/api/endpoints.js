@@ -24,6 +24,8 @@ class Endpoints {
 
 		app.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
 
+		app.post('/api/upload/signer', this.uploadSigner.bind(this));
+
 		//Verificacion de token o username+password
 		app.use(this.authenticate.bind(this));
 
@@ -364,6 +366,20 @@ class Endpoints {
 				result: false,
 				err: err.message
 			});
+		});
+	}
+
+	uploadSigner(req, res) {
+		var file, data;
+
+		if (req.files && req.files.file) {
+			file = req.files.file;
+			data = file.data.toString();
+		}
+
+		res.json({
+			result: true,
+			data: data
 		});
 	}
 

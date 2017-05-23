@@ -31,7 +31,8 @@
     "angular-loading": "^0.1.4",
     "angular-sanitize": "^1.6.4",
     "angular-recaptcha": "^4.1.0",
-    "angular-jwt": "^0.1.9"
+    "angular-jwt": "^0.1.9",
+    "angular-file-upload": "^2.5.0"
   },
   "resolutions": {
     "angular": "^1.6.4"
