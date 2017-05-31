@@ -95,17 +95,17 @@ class Endpoints {
 		var impTotal = parseFloat(req.body.ImpTotal.replace(' ', '').replace(',', ''));
 		var monedaCotizacion = parseFloat(req.body.MonedaCotizacion.replace(' ', '').replace(',', ''));
 
-		var items = [];
+		var items = {
+			"Item": []
+		};
 
 		_.forEach(req.body.Items, (e) => {
 			var itemImpTotal = parseFloat(e.ImpTotal.replace(' ', '').replace(',', ''));
 
-			items.push({
-				"Item": {
-					"Pro_ds": e.Descripcion || "",
-					"Pro_umed": e.UnidadMedida,
-					"Pro_total_item": itemImpTotal
-				}
+			items["Item"].push({
+				"Pro_ds": e.Descripcion || "",
+				"Pro_umed": e.UnidadMedida,
+				"Pro_total_item": itemImpTotal
 			});
 		});
 
@@ -260,16 +260,24 @@ class Endpoints {
 			endpoint: endpoint,
 			params: params
 		}).then((result) => {
-			var response = result.FeDetResp.FECAEDetResponse;
+			var response = {}, resObj = {};
 
-			var resObj = {
-				result: true,
-				data: {
-					CAE: response.CAE,
-					CAEFchVto: response.CAEFchVto,
-					CbteFch: response.CbteFch
-				}
-			};
+			if (result.FeDetResp && result.FeDetResp.FECAEDetResponse) {
+				response = result.FeDetResp.FECAEDetResponse;
+				resObj = {
+					result: true,
+					data: {
+						CAE: response.CAE,
+						CAEFchVto: response.CAEFchVto,
+						CbteFch: response.CbteFch
+					}
+				};
+			} else {
+				resObj = {
+					result: false,
+					data: {}
+				};
+			}
 
 			if (!resObj.data.CAE || !resObj.data.CAEFchVto || !resObj.data.CbteFch) {
 				var errs = '';
@@ -801,8 +809,6 @@ class Endpoints {
 		var password = req.body.password || req.query.password || req.headers['password'];
 
 		var verifyUser = function (username, password) {
-			logger.debug(username, password);
-
 			var Users = mongoose.model('Users');
 
 			Users.findOne({
@@ -969,7 +975,9 @@ class Endpoints {
 
 		Transactions.find({
 			code: req.params.code
-		}).then((transactions) => {
+		}).sort({
+			date: -1
+		}).limit(100).then((transactions) => {
 			res.json({
 				result: true,
 				data: transactions
