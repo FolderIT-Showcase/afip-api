@@ -977,7 +977,7 @@ class Endpoints {
 			code: req.params.code
 		}).sort({
 			date: -1
-		}).limit(100).then((transactions) => {
+		}).then((transactions) => {
 			res.json({
 				result: true,
 				data: transactions
