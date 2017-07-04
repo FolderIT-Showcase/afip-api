@@ -159,7 +159,7 @@ class Endpoints {
 				var obs = [result.FEXErr];
 
 				_.forEach(obs, (e) => {
-					var b = new Buffer(e.ErrMsg, 'binary').toString('utf8');
+					var b = new Buffer(e.ErrMsg, 'binary').toString('utf8').replace(/'/g, "").replace(/"/g, "");
 
 					errs += e.ErrCode + " - " + b + (e === obs[obs.length] ? "" : "\\r\\n\\r\\n");
 				});
@@ -289,7 +289,7 @@ class Endpoints {
 				}
 
 				_.forEach(obs, (e) => {
-					var b = new Buffer(e.Msg, 'binary').toString('utf8');
+					var b = new Buffer(e.Msg, 'binary').toString('utf8').replace(/'/g, "").replace(/"/g, "");
 
 					errs += e.Code + " - " + b + (e === obs[obs.length] ? "" : "\\r\\n\\r\\n");
 				});
