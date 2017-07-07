@@ -188,15 +188,17 @@ class Endpoints {
 		var service = "wsfev1";
 		var endpoint = "FECAESolicitar";
 
-		var impNeto = parseFloat(req.body.ImpNeto.replace(' ', '').replace(',', '')) || 0;
-		var impConc = parseFloat(req.body.ImpConc.replace(' ', '').replace(',', '')) || 0;
-		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace(',', '')) || 0;
-		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace(',', '')) || 0;
-		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace(',', '')) || 0;
+		var impNeto = parseFloat(String(req.body.ImpNeto).replace(' ', '').replace(',', '')) || 0;
+		var impConc = parseFloat(String(req.body.ImpConc).replace(' ', '').replace(',', '')) || 0;
+		var impExento = parseFloat(String(req.body.ImpOpEx).replace(' ', '').replace(',', '')) || 0;
+		var impTrib = parseFloat(String(req.body.ImpTrib).replace(' ', '').replace(',', '')) || 0;
+		var impIVA = parseFloat(String(req.body.ImpIva).replace(' ', '').replace(',', '')) || 0;
 		var impTotal = parseFloat((impNeto + impConc + impExento + impTrib + impIVA).toFixed(2));
 
+		var tributos = req.body.Tributos || [];
+
 		var idIVA = req.body.IdIVA || null;
-		var porcIva = 0;
+		var porcIVA = 0;
 		if (impNeto) {
 			porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
 		}
@@ -224,7 +226,17 @@ class Endpoints {
 			"Importe": impIVA
 		}];
 
-		var tributos = req.body.Tributos || [];
+		_.forEach(tributos, (t) => {
+			t.BaseImp = parseFloat(String(t.BaseImp).replace(' ', '').replace(',', '')) || 0;
+			t.Alic = parseFloat(String(t.Alic).replace(' ', '').replace(',', '')) || 0;
+			t.Importe = parseFloat(String(t.Importe).replace(' ', '').replace(',', '')) || 0;
+		});
+
+		if (!impTrib && tributos.length) {
+			_.forEach(tributos, (t) => {
+				impTrib += t.Importe;
+			});
+		}
 
 		var params = {
 			"FeCAEReq": {
@@ -254,16 +266,17 @@ class Endpoints {
 						"MonCotiz": req.body.MonCotiz || 1,
 						"Iva": [{
 							"AlicIva": alicIva
+						}],
+						"Tributos": [{
+							"Tributo": tributos
 						}]
 					}]
 				}
 			}
 		}
 
-		if (tributos.length) {
-			params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Tributos"] = [{
-				"Tributo": tributos
-			}];
+		if (!tributos.length) {
+			delete params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Tributos"];
 		}
 
 		this.afip({
