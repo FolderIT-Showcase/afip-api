@@ -92,7 +92,7 @@ class Endpoints {
 		var service = "wsfexv1";
 		var endpoint = "FEXAuthorize";
 
-		var impTotal = parseFloat(req.body.ImpTotal.replace(' ', '').replace(',', ''));
+		var impTotal = parseFloat(req.body.ImpTotal.replace(' ', '').replace(',', '')) || 0;
 		var monedaCotizacion = parseFloat(req.body.MonedaCotizacion.replace(' ', '').replace(',', ''));
 
 		var items = {
@@ -100,7 +100,7 @@ class Endpoints {
 		};
 
 		_.forEach(req.body.Items, (e) => {
-			var itemImpTotal = parseFloat(e.ImpTotal.replace(' ', '').replace(',', ''));
+			var itemImpTotal = parseFloat(e.ImpTotal.replace(' ', '').replace(',', '')) || 0;
 
 			items["Item"].push({
 				"Pro_ds": e.Descripcion || "",
@@ -186,15 +186,18 @@ class Endpoints {
 		var service = "wsfev1";
 		var endpoint = "FECAESolicitar";
 
-		var impNeto = parseFloat(req.body.ImpNeto.replace(' ', '').replace(',', ''));
-		var impConc = parseFloat(req.body.ImpConc.replace(' ', '').replace(',', ''));
-		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace(',', ''));
-		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace(',', ''));
-		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace(',', ''));
+		var impNeto = parseFloat(req.body.ImpNeto.replace(' ', '').replace(',', '')) || 0;
+		var impConc = parseFloat(req.body.ImpConc.replace(' ', '').replace(',', '')) || 0;
+		var impExento = parseFloat(req.body.ImpOpEx.replace(' ', '').replace(',', '')) || 0;
+		var impTrib = parseFloat(req.body.ImpTrib.replace(' ', '').replace(',', '')) || 0;
+		var impIVA = parseFloat(req.body.ImpIva.replace(' ', '').replace(',', '')) || 0;
 		var impTotal = parseFloat((impNeto + impConc + impExento + impTrib + impIVA).toFixed(2));
 
 		var idIVA = req.body.IdIVA || null;
-		var porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
+		var porcIva = 0;
+		if (impNeto) {
+			porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
+		}
 
 		if (!idIVA) {
 			// Tolerancia de 0.1 decimales
