@@ -895,25 +895,33 @@ class Endpoints {
 	login(req, res) {
 		var Users = mongoose.model('Users');
 
-		if (!req.body.rcResponse) {
-			return res.status(401).json({
-				result: false,
-				err: "Por favor ingrese la verificación reCAPTCHA."
-			});
-		}
-
 		Users.findOne({
 			username: req.body.username
 		}).then(function (user) {
 			if (!user)
-				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 			if (user.password != md5(req.body.password))
-				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 			var token = jwt.sign(user, global.tokenSecret, {
 				expiresIn: 60 * 60 * 24 // Expirar el token en 24 horas
 			});
+
+			// Si no proporciona un reCAPTCHA, se lo identifica como usuario externo y se lo autentica
+			if (!req.body.rcResponse) {
+				return res.json({
+					result: true,
+					token: token
+				});
+			}
+
+			// if (!req.body.rcResponse) {
+			// 	return res.json({
+			// 		result: false,
+			// 		err: "Por favor ingrese la verificación reCAPTCHA."
+			// 	});
+			// }
 
 			var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + config.rcSecret + "&response=" + req.body.rcResponse + "&remoteip=";
 
@@ -936,7 +944,7 @@ class Endpoints {
 				} else {
 					res.status(401).json({
 						result: false,
-						err: "La verificación reCAPTCHA ha expirado o es inválida. Intente nuevamente."
+						err: "La verificación reCAPTCHA ha expirado o es inválida. Por favor, intente nuevamente."
 					});
 				}
 			});
