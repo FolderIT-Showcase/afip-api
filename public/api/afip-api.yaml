@@ -1,0 +1,331 @@
+swagger: '2.0'
+info:
+  description: API de servicios REST para la utilización de los webservices de AFIP, en particular para Facturación Electrónica
+  version: 0.0.1
+  title: AFIP API
+  termsOfService: ''
+  contact:
+    email: mbustos@folderit.net
+  license:
+    name: ISC
+    url: 'https://www.isc.org/downloads/software-support-policy/isc-license/'
+host: wsfe.folderit.net
+basePath: /api
+consumes:
+  - "application/json; charset=utf-8"
+produces:
+  - "application/json; charset=utf-8"
+schemes:
+  - http
+paths:
+  '/login':
+    post:
+      tags:
+        - Login
+      summary: Obtención de token de autenticación
+      description: >-
+        Se debe enviar un usuario y contraseña válidos. Si el usuario es administrador, contará con acceso a todos los clientes. Si no es administrador, sólo podrá realizar operaciones sobre los clientes que tenga habilitados.
+      operationId: login
+      produces:
+        - application/json
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Datos de usuario a autenticar"
+          required: true
+          schema:
+            $ref: "#/definitions/Usuario"
+      responses:
+        '200':
+          $ref: '#/responses/Login'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalError'
+  '/generarCae':
+    post:
+      tags:
+        - WSFE
+      summary: Solicitud de CAE
+      description: TODO
+      operationId: generarCae
+      produces:
+        - application/json
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            allOf:
+            - $ref: "#/definitions/Cliente"
+            - $ref: "#/definitions/Comprobante"
+      responses:
+          '200':
+            $ref: '#/responses/RespuestaCAE'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
+  '/{servicio}/{endpoint}':
+    post:
+      tags:
+        - Servicios
+      summary: Solicitud genérica a servicio
+      description: TODO
+      operationId: genericEndpoint
+      produces:
+        - application/json
+      parameters:
+        - name: servicio
+          in: path
+          description: "Servicio AFIP a utilizar, ejemplo: wsfev1"
+          required: true
+          type: string
+        - name: endpoint
+          in: path
+          description: "Endpoint del servicio AFIP a consultar, ejemplo: FECompConsultar"
+          required: true
+          type: string
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            allOf:
+            - $ref: "#/definitions/Cliente"
+            - $ref: "#/definitions/Parametros"
+      responses:
+          '200':
+            $ref: '#/responses/RespuestaEndpoint'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
+responses:
+  Login:
+    description: Login exitoso
+    schema:
+      title: "Login"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            token:
+              type: string
+              description: "El token debe enviarse en las propiedades de autenticación del header de todas las solicitudes"
+  RespuestaEndpoint:
+    description: Consulta exitosa
+    schema:
+      title: "RespuestaEndpoint"
+      allOf:
+        - $ref: '#/definitions/ResultEndpoint'
+  RespuestaCAE:
+    description: Consulta exitosa
+    schema:
+      title: "RespuestaCAE"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            data:
+              $ref: '#/definitions/CAE'
+  BadRequest:
+    description: "Solicitud inválida"
+    schema:
+      $ref: '#/definitions/BadRequest'
+  Unauthorized:
+    description: "Autenticación inválida"
+    schema:
+      $ref: '#/definitions/Error'
+  Forbidden:
+    description: "No tiene permisos suficientes"
+    schema:
+      $ref: '#/definitions/Error'
+  InternalError:
+    description: "Error interno del servidor"
+    schema:
+      $ref: '#/definitions/Error'
+securityDefinitions:
+  basicAuth:
+    type: basic
+security:
+  - basicAuth: []
+definitions:
+  Response:
+    type: object
+    properties:
+      result:
+        type: boolean
+        default: 'true'
+        description: "Si la respuesta es satisfactoria, esta propiedad será true. De otra forma, será false."
+  Error:
+    type: object
+    properties:
+      result:
+        type: boolean
+        default: false
+        description: "El valor siempre será falso"
+      err:
+        type: string
+        description: "Mensaje descriptivo del error"
+      errDetails:
+        type: array
+        items:
+          type: string
+        description: "En caso que ocurran múltiples errores (por ejemplo, errores suministrados por AFIP), los mismos se informarán como elementos de este arreglo"
+  BadRequest:
+    allOf:
+    - $ref: "#/definitions/Error"
+    - title: "BadRequest"
+    - properties:
+        validations:
+          type: object
+          properties:
+            query:
+              type: array
+              description: "Errores de validación encontrados en la query string del request, generalmente en métodos GET"
+              items:
+                $ref: "#/definitions/Validation"
+            body:
+              type: array
+              description: "Errores de validación encontrados en el body del request, generalmente en métodos POST"
+              items:
+                $ref: "#/definitions/Validation"
+  Validation:
+    type: object
+    properties:
+      property:
+        type: string
+        description: "Nombre del header con nombre de la propiedad"
+      messages:
+        type: array
+        items:
+              type: string
+              description: "Mensaje descriptivo del error de validación"
+  Usuario:
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+  Cliente:
+    type: object
+    properties:
+      code:
+        type: string
+        description: "Código único del cliente representado en la operación"
+  Parametros:
+    type: object
+    properties:
+      params:
+        type: object
+        description: "Objeto con los parámetros a enviar al endpoint, según documentación del mismo"
+  ResultEndpoint:
+    type: object
+    properties:
+      ResultGet:
+        type: object
+        description: "Objeto con la respuesta del endpoint AFIP"
+  CAE:
+    type: object
+    properties:
+      CAE:
+        type: string
+        description: "Número de CAE proporcionado por AFIP"
+      CAEFchVto:
+        type: string
+        description: "Fecha de vencimiento del CAE, en formato YYYYMMDD"
+      CbteFch:
+        type: string
+        description: "Fecha del comprobante solicitado, en formato YYYYMMDD"
+  Comprobante:
+    type: object
+    description: "Objeto de comprobante, utilizado para la solicitud de CAE"
+    required: [ CbteTipo, PtoVta, CbteNro, CbteFch, DocNro ]
+    properties:
+      ImpNeto:
+        type: number
+        default: 0
+        description: "Importe neto total"
+      ImpConc:
+        type: number
+        default: 0
+        description: "Importe total neto no gravado"
+      ImpOpEx:
+        type: number
+        default: 0
+        description: "Importe total de operaciones exentas"
+      ImpTrib:
+        type: number
+        default: 0
+        description: "Importe total de tributos"
+      ImpIva:
+        type: number
+        default: 0
+        description: "Importe total de IVA"
+      IdIVA:
+        type: number
+        description: "ID de la alícuota de IVA utilizada, según tablas de AFIP. Si no se proporciona un ID, se intentará calcular en base al importe neto y el importe de IVA presentados."
+      DocNro:
+        type: string
+        description: "Número de documento del cliente"
+      PtoVta:
+        type: number
+        description: "Punto de venta"
+      DocTipo:
+        type: number
+        default: 80
+        description: "ID de tipo de documento del cliente, según tablas de AFIP"
+      CbteNro:
+        type: number
+        description: "Número de comprobante"
+      CbteFch:
+        type: string
+        description: "Fecha del comprobante, en formato YYYYMMDD"
+      Concepto:
+        type: number
+        default: 2
+        description: "ID del concepto del comprobante, según tablas de AFIP"
+      CantReg:
+        type: number
+        default: 1
+        description: "Cantidad de comprobantes a informar"
+      CbteTipo:
+        type: number
+        description: "ID del tipo de comprobante, según tablas de AFIP"
+      MonId:
+        type: string
+        default: "PES"
+        description: "ID de la moneda de los importes del comprobante, según tablas de AFIP"
+      MonCotiz:
+        type: number
+        default: 1
+        description: "Cotización de la moneda informada"
+      Tributos:
+        type: array
+        items:
+          $ref: "#/definitions/Tributo"
+  Tributo:
+    type: object
+    properties:
+      Id:
+        type: number
+        description: "ID del tributo, según tablas de AFIP"
+      BaseImp:
+        type: number
+        description: "Importe de la base imponible del tributo"
+      Importe:
+        type: string
+        description: "Importe del tributo"
