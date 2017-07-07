@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  description: API de servicios REST para la utilización de los webservices de AFIP, en particular para Facturación Electrónica
+  description: API de servicios REST para la utilización de los webservices de AFIP, en particular para Facturación Electrónica. Autenticación habilitada a través de Basic Auth, Authorization headers y User+pass en el body.
   version: 0.0.1
   title: AFIP API
   termsOfService: ''
@@ -57,7 +57,7 @@ paths:
     post:
       tags:
         - WSFE
-      summary: Solicitud de CAE
+      summary: Solicitud de CAE de un comprobante
       description: TODO
       operationId: generarCae
       produces:
@@ -113,7 +113,7 @@ paths:
     post:
       tags:
         - Servicios
-      summary: Solicitud genérica a servicio
+      summary: Solicitud genérica a un servicio AFIP
       description: TODO
       operationId: genericEndpoint
       produces:
@@ -151,7 +151,7 @@ paths:
     get:
       tags:
         - Servicios
-      summary: Forzar la actualización del token de autorización para un servicio
+      summary: Forzar la actualización del token de autorización para un servicio (WSAA)
       description: TODO
       operationId: refreshToken
       produces:
