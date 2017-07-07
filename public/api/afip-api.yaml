@@ -17,6 +17,13 @@ produces:
   - "application/json; charset=utf-8"
 schemes:
   - http
+tags:
+  - name: Login
+    description: Autorización y obtención de tokens
+  - name: WSFE
+    description: Endpoints referentes al servicio WSFE de AFIP
+  - name: Servicios
+    description: Endpoints de servicios generales
 paths:
   '/login':
     post:
@@ -257,53 +264,59 @@ definitions:
     properties:
       ImpNeto:
         type: number
+        format: double
         default: 0
         description: "Importe neto total"
       ImpConc:
         type: number
+        format: double
         default: 0
         description: "Importe total neto no gravado"
       ImpOpEx:
         type: number
+        format: double
         default: 0
         description: "Importe total de operaciones exentas"
       ImpTrib:
         type: number
+        format: double
         default: 0
-        description: "Importe total de tributos"
+        description: "Importe total de tributos. Si no se proporciona, se intentará calcular en base a los tributos informados."
       ImpIva:
         type: number
+        format: double
         default: 0
         description: "Importe total de IVA"
       IdIVA:
-        type: number
+        type: integer
         description: "ID de la alícuota de IVA utilizada, según tablas de AFIP. Si no se proporciona un ID, se intentará calcular en base al importe neto y el importe de IVA presentados."
       DocNro:
         type: string
         description: "Número de documento del cliente"
       PtoVta:
-        type: number
+        type: integer
         description: "Punto de venta"
       DocTipo:
-        type: number
+        type: integer
         default: 80
         description: "ID de tipo de documento del cliente, según tablas de AFIP"
       CbteNro:
-        type: number
+        type: integer
+        format: int64
         description: "Número de comprobante"
       CbteFch:
         type: string
         description: "Fecha del comprobante, en formato YYYYMMDD"
       Concepto:
-        type: number
+        type: integer
         default: 2
         description: "ID del concepto del comprobante, según tablas de AFIP"
       CantReg:
-        type: number
+        type: integer
         default: 1
         description: "Cantidad de comprobantes a informar"
       CbteTipo:
-        type: number
+        type: integer
         description: "ID del tipo de comprobante, según tablas de AFIP"
       MonId:
         type: string
@@ -311,6 +324,7 @@ definitions:
         description: "ID de la moneda de los importes del comprobante, según tablas de AFIP"
       MonCotiz:
         type: number
+        format: double
         default: 1
         description: "Cotización de la moneda informada"
       Tributos:
@@ -319,13 +333,25 @@ definitions:
           $ref: "#/definitions/Tributo"
   Tributo:
     type: object
+    required: [ Id, Alic ]
     properties:
       Id:
-        type: number
+        type: integer
         description: "ID del tributo, según tablas de AFIP"
+      Desc:
+        type: string
+        description: "Descripción del tributo"
       BaseImp:
         type: number
+        format: double
+        default: 0
         description: "Importe de la base imponible del tributo"
+      Alic:
+        type: number
+        format: double
+        description: "Alícuota (porcentaje) del tributo"
       Importe:
-        type: string
+        type: number
+        format: double
+        default: 0
         description: "Importe del tributo"
