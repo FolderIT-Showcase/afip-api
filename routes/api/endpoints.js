@@ -167,12 +167,14 @@ class Endpoints {
 				resObj.result = false;
 				resObj.err = (obs.length > 1 ? "Ocurrieron " + obs.length + " errores" : "Ocurrió 1 error") + " al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.";
 				resObj.errDetails = errs;
+
+				res.status(400);
 			}
 
 			res.json(resObj);
 		}).catch((err) => {
 			logger.error(err);
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -210,11 +212,10 @@ class Endpoints {
 		}
 
 		if (!idIVA) {
-			res.json({
+			return res.status(400).json({
 				result: false,
 				err: "El importe de IVA no se corresponde a ningún porcentaje de IVA ofrecido por AFIP: " + porcIVA
 			});
-			return;
 		}
 
 		var params = {
@@ -300,12 +301,14 @@ class Endpoints {
 				resObj.result = false;
 				resObj.err = (obs.length > 1 ? "Ocurrieron " + obs.length + " errores" : "Ocurrió 1 error") + " al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.";
 				resObj.errDetails = errs;
+
+				res.status(400);
 			}
 
 			res.json(resObj);
 		}).catch((err) => {
 			logger.error(err);
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -323,13 +326,13 @@ class Endpoints {
 						data: JSON.parse(body).data
 					});
 				} else {
-					res.json({
+					res.status(400).json({
 						result: false,
 						err: "CUIT no encontrado"
 					});
 				}
 			} else {
-				res.json({
+				res.status(500).json({
 					result: false,
 					err: err
 				});
@@ -366,6 +369,8 @@ class Endpoints {
 
 				resObj.result = false;
 				resObj.err = errs.length ? errs : [errs];
+
+				res.status(400);
 			} else {
 				resObj.data = result.CbteNro;
 			}
@@ -373,7 +378,7 @@ class Endpoints {
 			res.json(resObj);
 		}).catch((err) => {
 			logger.error(err);
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -424,7 +429,7 @@ class Endpoints {
 				data: client
 			});
 		}).catch((err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				message: err.message
 			});
@@ -455,13 +460,15 @@ class Endpoints {
 
 				resObj.result = false;
 				resObj.err = errs.length ? errs : [errs];
+
+				res.status(400);
 			} else {
 				resObj.data = result.ResultGet.CbteTipo;
 			}
 
 			res.json(resObj);
 		}).catch((err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -617,7 +624,7 @@ class Endpoints {
 				data: token
 			});
 		}).catch((err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -739,11 +746,10 @@ class Endpoints {
 			afipRequest = _.merge(afipRequest, params);
 
 			if (typeof (soapClient[endpoint]) !== 'function') {
-				res.json({
+				return res.status(400).json({
 					result: false,
 					err: "El endpoint solicitado no existe para el servicio: " + endpoint
 				});
-				return;
 			}
 
 			soapClient[endpoint](afipRequest, (err, result) => {
@@ -760,12 +766,12 @@ class Endpoints {
 				try {
 					res.json(result[`${endpoint}Result`]);
 				} catch (e) {
-					res.json(result);
+					res.status(400).json(result);
 				}
 			});
 		}).catch((err) => {
 			logger.error(err)
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -795,7 +801,7 @@ class Endpoints {
 		}).then((soapClient) => {
 			res.json(soapClient.describe());
 		}).catch((err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -867,7 +873,7 @@ class Endpoints {
 		var Users = mongoose.model('Users');
 
 		if (!req.body.rcResponse) {
-			return res.json({
+			return res.status(401).json({
 				result: false,
 				err: "Por favor ingrese la verificación reCAPTCHA."
 			});
@@ -877,10 +883,10 @@ class Endpoints {
 			username: req.body.username
 		}).then(function (user) {
 			if (!user)
-				return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
 
 			if (user.password != md5(req.body.password))
-				return res.json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta, o el usuario no existe" });
 
 			var token = jwt.sign(user, global.tokenSecret, {
 				expiresIn: 60 * 60 * 24 // Expirar el token en 24 horas
@@ -891,7 +897,7 @@ class Endpoints {
 			request(verificationUrl, (error, response, body) => {
 				if (error) {
 					logger.error(err);
-					return res.json({
+					return res.status(401).json({
 						result: false,
 						err: "Ocurrió un error al intentar verificar el reCAPTCHA. Por favor, intente nuevamente."
 					});
@@ -905,14 +911,14 @@ class Endpoints {
 						token: token
 					});
 				} else {
-					res.json({
+					res.status(401).json({
 						result: false,
 						err: "La verificación reCAPTCHA ha expirado o es inválida. Intente nuevamente."
 					});
 				}
 			});
 		}, function (err) {
-			return res.json({ result: false, err: err.message });
+			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -934,7 +940,7 @@ class Endpoints {
 				next();
 			}
 		}, (err) => {
-			return res.json({
+			return res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -950,7 +956,7 @@ class Endpoints {
 				data: clients
 			});
 		}, (err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -966,7 +972,7 @@ class Endpoints {
 				data: users
 			});
 		}, (err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -986,7 +992,7 @@ class Endpoints {
 				data: transactions
 			});
 		}, (err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -1004,7 +1010,7 @@ class Endpoints {
 				data: permissions
 			});
 		}, (err) => {
-			res.json({
+			res.status(500).json({
 				result: false,
 				err: err.message
 			});
@@ -1017,8 +1023,9 @@ class Endpoints {
 		Users.findOne({
 			username: req.body.username
 		}).then(function (user) {
-			if (user)
-				return res.json({ result: false, err: "El usuario ya existe" });
+			if (user) {
+				return res.status(400).json({ result: false, err: "El usuario ya existe" });
+			}
 
 			var newUser = req.body;
 			newUser.password = md5(req.body.password);
@@ -1028,10 +1035,10 @@ class Endpoints {
 			user.save().then(function (user) {
 				res.json({ result: true, data: user });
 			}, function (err) {
-				return res.json({ result: false, err: err.message });
+				return res.status(500).json({ result: false, err: err.message });
 			});
 		}, function (err) {
-			return res.json({ result: false, err: err.message });
+			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1042,18 +1049,19 @@ class Endpoints {
 			username: req.body.username,
 			code: req.body.code
 		}).then(function (permit) {
-			if (permit)
-				return res.json({ result: false, err: "El permiso ya existe" });
+			if (permit) {
+				return res.status(400).json({ result: false, err: "El permiso ya existe" });
+			}
 
 			var permit = new UserPermissions(req.body);
 
 			permit.save().then(function (permit) {
 				res.json({ result: true, data: permit });
 			}, function (err) {
-				return res.json({ result: false, err: err.message });
+				return res.status(500).json({ result: false, err: err.message });
 			});
 		}, function (err) {
-			return res.json({ result: false, err: err.message });
+			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1063,8 +1071,9 @@ class Endpoints {
 		Clients.findOne({
 			code: req.body.code
 		}).then(function (client) {
-			if (client)
-				return res.json({ result: false, err: "El cliente ya existe" });
+			if (client) {
+				return res.status(400).json({ result: false, err: "El cliente ya existe" });
+			}
 
 			var newClient = req.body;
 
@@ -1073,10 +1082,10 @@ class Endpoints {
 			client.save().then(function (client) {
 				res.json({ result: true, data: client });
 			}, function (err) {
-				return res.json({ result: false, err: err.message });
+				return res.status(500).json({ result: false, err: err.message });
 			});
 		}, function (err) {
-			return res.json({ result: false, err: err.message });
+			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1085,17 +1094,18 @@ class Endpoints {
 		var editedClient = req.body;
 
 		Clients.findById(editedClient._id).then((client) => {
-			if (!client)
-				return res.json({ result: false, err: "El cliente no existe" });
+			if (!client) {
+				return res.status(400).json({ result: false, err: "El cliente no existe" });
+			}
 
 			_.merge(client, editedClient);
 			client.save().then((client) => {
 				res.json({ result: true, data: client });
 			}, (err) => {
-				res.json({ result: false, err: err.message });
+				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1104,17 +1114,18 @@ class Endpoints {
 		var editedUser = req.body;
 
 		Users.findById(editedUser._id).then((user) => {
-			if (!user)
-				return res.json({ result: false, err: "El usuario no existe" });
+			if (!user) {
+				return res.status(400).json({ result: false, err: "El usuario no existe" });
+			}
 
 			_.merge(user, editedUser);
 			user.save().then((user) => {
 				res.json({ result: true, data: user });
 			}, (err) => {
-				res.json({ result: false, err: err.message });
+				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1123,17 +1134,18 @@ class Endpoints {
 		var editedPermit = req.body;
 
 		UserPermissions.findById(editedPermit._id).then((permit) => {
-			if (!permit)
-				return res.json({ result: false, err: "El permiso no existe" });
+			if (!permit) {
+				return res.status(400).json({ result: false, err: "El permiso no existe" });
+			}
 
 			_.merge(permit, editedPermit);
 			permit.save().then((permit) => {
 				res.json({ result: true, data: permit });
 			}, (err) => {
-				res.json({ result: false, err: err.message });
+				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1142,18 +1154,19 @@ class Endpoints {
 		var editedUser = req.body;
 
 		Users.findById(editedUser._id).then((user) => {
-			if (!user)
-				return res.json({ result: false, err: "El usuario no existe" });
+			if (!user) {
+				return res.status(400).json({ result: false, err: "El usuario no existe" });
+			}
 
 			user.password = md5(editedUser.newPassword);
 
 			user.save().then((user) => {
 				res.json({ result: true, data: user });
 			}, (err) => {
-				res.json({ result: false, err: err.message });
+				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1164,7 +1177,7 @@ class Endpoints {
 		Clients.findByIdAndRemove(client._id).exec().then((client) => {
 			res.json({ result: true, data: client });
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1175,7 +1188,7 @@ class Endpoints {
 		UserPermissions.findByIdAndRemove(permit._id).exec().then((permit) => {
 			res.json({ result: true, data: permit });
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 
@@ -1186,7 +1199,7 @@ class Endpoints {
 		Users.findByIdAndRemove(user._id).exec().then((user) => {
 			res.json({ result: true, data: user });
 		}, (err) => {
-			res.json({ result: false, err: err.message });
+			res.status(500).json({ result: false, err: err.message });
 		});
 	}
 }
