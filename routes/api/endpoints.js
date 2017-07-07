@@ -218,6 +218,14 @@ class Endpoints {
 			});
 		}
 
+		var alicIva = [{
+			"Id": idIVA,
+			"BaseImp": impNeto,
+			"Importe": impIVA
+		}];
+
+		var tributos = req.body.Tributos || [];
+
 		var params = {
 			"FeCAEReq": {
 				"FeCabReq": {
@@ -245,15 +253,17 @@ class Endpoints {
 						"MonId": req.body.MonId || "PES",
 						"MonCotiz": req.body.MonCotiz || 1,
 						"Iva": [{
-							"AlicIva": [{
-								"Id": idIVA,
-								"BaseImp": impNeto,
-								"Importe": impIVA
-							}]
+							"AlicIva": alicIva
 						}]
 					}]
 				}
 			}
+		}
+
+		if (tributos.length) {
+			params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Tributos"] = [{
+				"Tributo": tributos
+			}];
 		}
 
 		this.afip({
