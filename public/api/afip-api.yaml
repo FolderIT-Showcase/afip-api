@@ -81,6 +81,34 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
+  '/lastCbte':
+    post:
+      tags:
+        - WSFE
+      summary: Obtención del último comprobante autorizado
+      description: TODO
+      operationId: lastCbte
+      produces:
+        - application/json
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            allOf:
+            - $ref: "#/definitions/Cliente"
+            - $ref: "#/definitions/UltimoComprobante"
+      responses:
+          '200':
+            $ref: '#/responses/RespuestaUltimoComprobante'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
   '/{servicio}/{endpoint}':
     post:
       tags:
@@ -147,6 +175,16 @@ responses:
           properties:
             data:
               $ref: '#/definitions/CAE'
+  RespuestaUltimoComprobante:
+    description: Consulta exitosa
+    schema:
+      title: "RespuestaUltimoComprobante"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            data:
+              $ref: '#/definitions/NroComprobante'
   BadRequest:
     description: "Solicitud inválida"
     schema:
@@ -355,3 +393,17 @@ definitions:
         format: double
         default: 0
         description: "Importe del tributo"
+  UltimoComprobante:
+    type: object
+    required: [ PtoVta, CbteTipo ]
+    properties:
+      PtoVta:
+        type: integer
+        description: "Punto de venta"
+      CbteTipo:
+        type: integer
+        description: "ID del tipo de comprobante, según tablas de AFIP"
+  NroComprobante:
+    type: integer
+    format: int64
+    description: "Número de comprobante"
