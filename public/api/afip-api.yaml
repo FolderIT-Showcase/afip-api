@@ -147,6 +147,37 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
+  '/{servicio}/{codigo}/refresh/token':
+    get:
+      tags:
+        - Servicios
+      summary: Forzar la actualización del token de autorización para un servicio
+      description: TODO
+      operationId: refreshToken
+      produces:
+        - application/json
+      parameters:
+        - name: servicio
+          in: path
+          description: "Servicio AFIP a actualizar, ejemplo: wsfev1"
+          required: true
+          type: string
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
+      responses:
+          '200':
+            $ref: '#/responses/TokenActualizado'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
 responses:
   Login:
     description: Login exitoso
@@ -185,6 +216,16 @@ responses:
           properties:
             data:
               $ref: '#/definitions/NroComprobante'
+  TokenActualizado:
+    description: Consulta exitosa
+    schema:
+      title: "TokenActualizado"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            data:
+              $ref: '#/definitions/TokenWSAA'
   BadRequest:
     description: "Solicitud inválida"
     schema:
@@ -407,3 +448,35 @@ definitions:
     type: integer
     format: int64
     description: "Número de comprobante"
+  Credenciales:
+    type: object
+    properties:
+      sign:
+        type: string
+        description: "Firma generada por WSAA"
+      token:
+        type: string
+        description: "String de token generada por WSAA"
+  TokenWSAA:
+    type: object
+    properties:
+      code:
+        type: string
+        description: "Código del cliente propietario del token"
+      type:
+        type: string
+        enum: [ "PROD", "HOMO" ]
+        description: "Tipo del token autorizado: producción u homologación"
+      service:
+        type: string
+        description: "Servicio AFIP asociado al token"
+      credentials:
+        $ref: "#/definitions/Credenciales"
+      since:
+        type: string
+        format: date
+        description: "Fecha de solicitud del token"
+      until:
+        type: string
+        format: date
+        description: "Fecha de expiración del token"
