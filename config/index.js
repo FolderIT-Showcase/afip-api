@@ -1,7 +1,7 @@
 var colors = require('colors');
 
 module.exports = {
-    environment: process.env.NODE_ENV || 'production',
+    environment: process.env.WSFE_ENV || 'development',
     databases: {
         production: 'mongodb://nodefe:290rh06p@127.0.0.1:27017/nodefe?authSource=user-data', //'mongodb://172.10.10.200:27017/nodefe',
         development: 'mongodb://nodefe:290rh06p@104.237.155.78:27017/nodefe?authSource=user-data'

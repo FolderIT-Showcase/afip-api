@@ -38,8 +38,8 @@ db.once('open', function () {
 	app.use(express.static(path.join(__dirname, 'public')));
 	app.use('/bower_components', express.static(path.join(__dirname, '/bower_components')));
 
-	app.listen(process.env.PORT || 80, function () {
-		logger.info('AFIP API listening on port', (process.env.PORT || 80));
+	app.listen(process.env.WSFE_PORT || 3000, function () {
+		logger.info('AFIP API listening on port', (process.env.WSFE_PORT || 3000));
 
 		// Inicializacion de modelos de la base de datos
 		require('./models');
