@@ -37,6 +37,7 @@ db.once('open', function () {
 	app.use(favicon(path.join(__dirname, 'public', 'assets', 'img', 'favicon.ico')));
 	app.use(express.static(path.join(__dirname, 'public')));
 	app.use('/bower_components', express.static(path.join(__dirname, '/bower_components')));
+	app.use('/api', express.static(path.join(__dirname, 'public/api')));
 
 	app.listen(process.env.PORT || 3000, function () {
 		logger.info('AFIP API listening on port', (process.env.PORT || 3000));
