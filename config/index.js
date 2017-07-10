@@ -3,8 +3,8 @@ var colors = require('colors');
 module.exports = {
     environment: process.env.NODE_ENV || 'production',
     databases: {
-        production: 'mongodb://172.10.10.200:27017/nodefe',
-        development: 'mongodb://172.10.10.200:27017/nodefe'//'mongodb://nodefe:290rh06p@104.237.155.78:27017/nodefe?authSource=user-data'
+        production: 'mongodb://nodefe:290rh06p@127.0.0.1:27017/nodefe?authSource=user-data', //'mongodb://172.10.10.200:27017/nodefe',
+        development: 'mongodb://nodefe:290rh06p@104.237.155.78:27017/nodefe?authSource=user-data'
     },
     tokenSecret: "FindIndustrialRecallEaten",
     rcSecret: '6Les3h8UAAAAAIdyZEB0lXy1zn-G9T_nbHzhZfhB',
