@@ -132,6 +132,31 @@ var authenticate = function (req, res, next) {
 		});
 	}
 }
+
+var administrative = function (req, res, next) {
+	var username = req.decoded ? req.decoded._doc.username : "";
+	var Users = mongoose.model('Users');
+
+	Users.findOne({
+		username: username,
+		admin: true
+	}).then((user) => {
+		if (!user) {
+			return res.status(403).json({
+				result: false,
+				err: "El usuario no tiene permisos suficientes."
+			});
+		} else {
+			next();
+		}
+	}, (err) => {
+		return res.status(500).json({
+			result: false,
+			err: err.message
+		});
+	});
+}
+
 var permission = function (req, res, next) {
 	var username = req.decoded ? req.decoded._doc.username : "";
 	var code = req.params.code || req.body.code;
