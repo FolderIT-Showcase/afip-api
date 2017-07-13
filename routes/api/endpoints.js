@@ -74,6 +74,48 @@ var localSchemas = {
 		}
 	}
 };
+var permission = function (req, res, next) {
+	var username = req.decoded ? req.decoded._doc.username : "";
+	var code = req.params.code || req.body.code;
+
+	var Users = mongoose.model('Users');
+	var UserPermissions = mongoose.model('UserPermissions');
+
+	UserPermissions.findOne({
+		username: username,
+		code: code,
+		active: true
+	}).then((permit) => {
+		if (permit) {
+			return next();
+		}
+
+		//Si el usuario no tiene permisos, verificar si es administrador
+		Users.findOne({
+			username: username,
+			admin: true
+		}).then((user) => {
+			if (!user) {
+				return res.status(403).json({
+					result: false,
+					message: "El usuario no tiene permisos para interactuar con el cliente solicitado."
+				});
+			}
+
+			next();
+		}, (err) => {
+			res.status(500).json({
+				status: false,
+				err: err.message
+			});
+		});
+	}).catch((err) => {
+		res.status(500).json({
+			status: false,
+			err: err.message
+		});
+	});
+}
 class Endpoints {
 	constructor(app) {
 		//Autenticacion
