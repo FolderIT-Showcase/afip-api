@@ -10,6 +10,7 @@
     "csr-gen": "^0.2.1",
     "express": "^4.13.4",
     "express-fileupload": "^0.1.3",
+    "express-jsonschema": "^1.1.6",
     "jsonwebtoken": "^7.3.0",
     "lodash": "4.12.0",
     "md5": "^2.2.1",
