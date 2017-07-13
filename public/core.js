@@ -222,7 +222,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     $scope.getClients = function(next) {
         $loading.start('clients');
 
-        $http.get('/api/getClients')
+        $http.get('/api/admin/getClients')
             .then(function(res) {
             $loading.finish('clients');
 
@@ -242,7 +242,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     $scope.getUsers = function(next) {
         $loading.start('users');
 
-        $http.get('/api/getUsers')
+        $http.get('/api/admin/getUsers')
             .then(function(res) {
             $loading.finish('users');
 
@@ -289,7 +289,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         $http.get('/api/cbteTipo/' + client.code).then(function(res) {
             if(res.data.result) {
                 $scope.CbteTipo = res.data.data;
-                return $http.get('/api/transactions/' + client.code);
+                return $http.get('/api/admin/transactions/' + client.code);
             } else {
                 $loading.finish('transactions');
                 toastr.error(res.data.err);
@@ -411,7 +411,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.user = angular.copy(newUser);
             $loading.start('users');
 
-            $http.post('/api/newUser', $scope.user)
+            $http.post('/api/admin/newUser', $scope.user)
                 .then(function(res) {
                 $loading.finish('users');
 
@@ -446,7 +446,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.client = angular.copy(newClient);
             $loading.start('clients');
 
-            $http.post('/api/newClient', $scope.client)
+            $http.post('/api/admin/newClient', $scope.client)
                 .then(function(res) {
                 $loading.finish('clients');
 
@@ -471,7 +471,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         $scope.client.code += "-COPY";
         $scope.client._id = undefined;
 
-        $http.post('/api/newClient', $scope.client)
+        $http.post('/api/admin/newClient', $scope.client)
             .then(function(res) {
             $loading.finish('clients');
 
@@ -501,7 +501,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.user = angular.copy(editedUser);
             $loading.start('users');
 
-            $http.post('/api/editUser', $scope.user)
+            $http.post('/api/admin/editUser', $scope.user)
                 .then(function(res) {
                 $loading.finish('users');
 
@@ -572,7 +572,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.client = angular.copy(editedClient);
             $loading.start('clients');
 
-            $http.post('/api/editClient', $scope.client)
+            $http.post('/api/admin/editClient', $scope.client)
                 .then(function(res) {
                 $loading.finish('clients');
 
@@ -615,7 +615,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             $scope.user.password = editedUser.newPassword;
             $loading.start('users');
 
-            $http.post('/api/resetPassword', $scope.user)
+            $http.post('/api/admin/resetPassword', $scope.user)
                 .then(function(res) {
                 $loading.finish('users');
 
@@ -666,7 +666,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         modalInstance.result.then(function () {
             $loading.start('clients');
 
-            $http.post('/api/removeClient', client)
+            $http.post('/api/admin/removeClient', client)
                 .then(function(res) {
                 $loading.finish('clients');
 
@@ -699,7 +699,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         modalInstance.result.then(function () {
             $loading.start('users');
 
-            $http.post('/api/removeUser', user)
+            $http.post('/api/admin/removeUser', user)
                 .then(function(res) {
                 $loading.finish('users');
 
@@ -745,7 +745,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     $scope.regenTokensGet = function(formData) {
         $loading.start('regenTokens');
 
-        $http.get('/api/' + formData.service + '/' + formData.code + '/refresh/token').then(function(res) {
+        $http.get('/api/' + formData.code + '/' + formData.service + '/refresh/token').then(function(res) {
             $loading.finish('regenTokens');
 
             if (res.data.result) {
@@ -894,7 +894,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
             $scope.permit = angular.copy(newPermit);
             $loading.start('permissions');
 
-            $http.post('/api/newPermit', $scope.permit)
+            $http.post('/api/admin/newPermit', $scope.permit)
                 .then(function(res) {
                 $loading.finish('permissions');
 
@@ -927,7 +927,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
             $scope.permit = angular.copy(editedPermit);
             $loading.start('permissions');
 
-            $http.post('/api/editPermit', $scope.permit)
+            $http.post('/api/admin/editPermit', $scope.permit)
                 .then(function(res) {
                 $loading.finish('permissions');
 
@@ -961,7 +961,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
         modalInstance.result.then(function () {
             $loading.start('permissions');
 
-            $http.post('/api/removePermit', permit)
+            $http.post('/api/admin/removePermit', permit)
                 .then(function(res) {
                 $loading.finish('permissions');
 
@@ -984,7 +984,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
     $scope.getPermissions = function(user) {
         $loading.start('permissions');
 
-        $http.get('/api/permissions/' + user.username)
+        $http.get('/api/admin/permissions/' + user.username)
             .then(function(res) {
             $loading.finish('permissions');
 
