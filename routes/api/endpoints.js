@@ -157,6 +157,48 @@ var administrative = function (req, res, next) {
 	});
 }
 
+var validate = function (req, res, next) {
+	var path = req.route.path;
+	var method = req.method.toLowerCase();
+	var schema = {};
+
+	if (localSchemas[method] && localSchemas[method][path]) {
+		schema = localSchemas[method][path];
+		if (schema.query && schema.query.additionalProperties) {
+			for (let p in schema.query.additionalProperties) {
+				schema.query.properties[p] = schema.query.additionalProperties[p];
+			}
+		}
+
+		return require('express-jsonschema').validate(schema)(req, res, next);
+	} else {
+		// Si el endpoint es un servicio+endpoint, intentar reconocer y obtener el esquema
+		path = path.replace("/api/admin/", "");
+		path = path.replace("/api/:code/", "");
+		path = path.replace("/api/", "");
+
+		logger.debug(path);
+
+		if (path.split("/").length == 2) {
+			var service = path.split("/")[0];
+			var endpoint = path.split("/")[1];
+
+			if (schemas[service] && schemas[service][endpoint]) {
+				schema = {
+					body: {
+						type: "object",
+						properties: schemas[service][endpoint]
+					}
+				};
+
+				return require('express-jsonschema').validate(schema)(req, res, next);
+			}
+		} else {
+			next();
+		}
+	}
+}
+
 var permission = function (req, res, next) {
 	var username = req.decoded ? req.decoded._doc.username : "";
 	var code = req.params.code || req.body.code;
