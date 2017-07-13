@@ -316,7 +316,7 @@ class Endpoints {
 
 		app.get('/api/:code/:service/describe', validate, permission, this.describe.bind(this));
 
-		app.post('/api/:service/:endpoint', validate, permission, this.endpoint.bind(this));
+		app.post('/api/:code/:service/:endpoint', validate, permission, this.endpoint.bind(this));
 
 		app.use(jsonSchemaValidation);
 
@@ -1065,7 +1065,7 @@ class Endpoints {
 				}
 			});
 		}).catch((err) => {
-			logger.error(err)
+			logger.error(err);
 			res.status(500).send({
 				result: false,
 				err: err.message
