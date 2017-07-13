@@ -369,7 +369,7 @@ class Endpoints {
 
 	generar_caex(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
+		var code = req.params.code || req.body.code;
 		var version = "v1";
 		var service = "wsfexv1";
 		var endpoint = "FEXAuthorize";
@@ -465,7 +465,7 @@ class Endpoints {
 
 	generar_cae(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
+		var code = req.params.code || req.body.code;
 		var version = "v1";
 		var service = "wsfev1";
 		var endpoint = "FECAESolicitar";
@@ -647,7 +647,7 @@ class Endpoints {
 
 	lastCbte(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
+		var code = req.params.code || req.body.code;
 		var version = "v1";
 		var service = "wsfev1";
 		var endpoint = "FECompUltimoAutorizado";
@@ -706,7 +706,7 @@ class Endpoints {
 
 	genRSA(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
+		var code = req.params.code || req.body.code;
 		var client;
 
 		this.validate_username(username, code).then((permit) => {
@@ -743,7 +743,7 @@ class Endpoints {
 
 	getCbteTipo(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.params.code;
+		var code = req.params.code || req.body.code;
 		var version = "v1";
 		var service = "wsfev1";
 		var endpoint = "FEParamGetTiposCbte";
@@ -916,7 +916,7 @@ class Endpoints {
 
 	recreate_token(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.params.code;
+		var code = req.params.code || req.body.code;
 		var service = req.params.service;
 
 		this.validate_username(username, code).then((permit) => {
@@ -1021,7 +1021,7 @@ class Endpoints {
 
 	endpoint(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code;
+		var code = req.params.code || req.body.code;
 		var version = req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint;
@@ -1085,7 +1085,7 @@ class Endpoints {
 
 	describe(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.body.code || "";
+		var code = req.params.code || req.body.code || "";
 		var version = req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint || "";
@@ -1104,8 +1104,14 @@ class Endpoints {
 
 			return this.createClientForService(type, version, service, endpoint);
 		}).then((soapClient) => {
-			res.json(soapClient.describe());
+			var serviceDescription = JSON.stringify(soapClient.describe());
+
+			res.json({
+				result: true,
+				data: serviceDescription
+			});
 		}).catch((err) => {
+			logger.error(err);
 			res.status(500).json({
 				result: false,
 				err: err.message
