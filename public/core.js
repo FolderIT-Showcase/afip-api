@@ -65,8 +65,18 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
             } else if (rejection.status === 403) {
                 toastr.warning("Su usuario no tiene permisos para realizar la operación.");
                 canceller.resolve('Forbidden');
-            } else {
-                toastr.error(rejection.data || TEXT_ERRORS.ERR_API_CONNECTION);
+            } else {                
+                let err = TEXT_ERRORS.ERR_API_CONNECTION;
+
+                if (rejection.data && rejection.data.err) {
+                    err = rejection.data.err;
+                }
+
+                if (rejection.data && typeof(rejection.data) === "string") {
+                    err = rejection.data;
+                }
+
+                toastr.error(err);
             }
             return $q.reject(rejection);
         }
@@ -99,7 +109,7 @@ app.controller('ReportingController', ['$scope', function($scope) {
 app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'FileUploader', function($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, FileUploader) {
     var uploader = $scope.uploader = new FileUploader();
     uploader.url = "/api/upload/signer";
-    
+
     $scope.clients = [];
     $scope.users = [];
     $scope.client = {};
@@ -195,7 +205,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
         ]
     };
-    
+
     uploader.onAfterAddingFile = function(fileItem) {
         $loading.start('uploadSigner');
         fileItem.upload();
@@ -214,7 +224,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     uploader.onCompleteAll = function() {
         $loading.finish('uploadSigner');
     };
-    
+
     $scope.toggleSigner = function() {
         $scope.dndSigner = !$scope.dndSigner;
     }
@@ -1089,7 +1099,7 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
         .otherwise({
         redirectTo: '/'
     });
-    
+
     $locationProvider.hashPrefix('').html5Mode(true);
 }]);
 
