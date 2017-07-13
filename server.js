@@ -39,6 +39,9 @@ db.once('open', function () {
 	app.use('/bower_components', express.static(path.join(__dirname, '/bower_components')));
 	app.use('/api', express.static(path.join(__dirname, 'public/api')));
 
+	// Permitir certificados de cualquier CA
+	process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+
 	app.listen(process.env.PORT || 3000, function () {
 		logger.info('AFIP API listening on port', (process.env.PORT || 3000));
 
