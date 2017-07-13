@@ -1072,7 +1072,7 @@ app.directive("compareTo", [function() {
     };
 }]);
 
-app.config(['$routeProvider', '$urlRouterProvider', '$locationProvider', function($routeProvider, $urlRouterProvider, $locationProvider) {
+app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider
         .when('/', {
         templateUrl: 'views/login.html',
@@ -1090,7 +1090,6 @@ app.config(['$routeProvider', '$urlRouterProvider', '$locationProvider', functio
         redirectTo: '/'
     });
     
-    $urlRouterProvider.when('/', '/login').otherwise('/login');
     $locationProvider.hashPrefix('').html5Mode(true);
 }]);
 
