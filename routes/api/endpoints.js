@@ -12,9 +12,11 @@ var _ = require('lodash'),
 	moment = require('moment'),
 	_ = require('lodash'),
 	fs = require('fs'),
+	mkdirp = require('mkdirp'),
 	path = require('path'),
 	config = require('./../../config'),
 	auth = require('basic-auth'),
+	addSchemaProperties = require('express-jsonschema').addSchemaProperties,
 	schemas = require('../../schemas'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 
@@ -241,12 +243,66 @@ var permission = function (req, res, next) {
 		});
 	});
 }
+
+var jsonSchemaValidation = function (err, req, res, next) {
+	var responseData;
+
+	if (err.name === 'JsonSchemaValidation') {
+		logger.error(err.validations);
+		res.status(400);
+
+		responseData = {
+			result: false,
+			err: 'Parámetros inválidos',
+			validations: err.validations
+		};
+
+		if (req.xhr || req.get('Content-Type') === 'application/json') {
+			res.json(responseData);
+		} else {
+			res.send(JSON.stringify(responseData));
+		}
+	} else {
+		next(err);
+	}
+}
+
 class Endpoints {
 	constructor(app) {
-		//Autenticacion
-		app.post('/api/login', this.login.bind(this));
+		addSchemaProperties({
+			isDate: function (value, schema, options, ctx) {
+				if (!value) return;
 
+				var valid = moment(value).isValid() === schema.isDate;
+
+				if (!valid) {
+					return "is " + (schema.isDate === true ? "not " : "") + "a valid date";
+				}
+			},
+			isNumber: function (value, schema, options, ctx) {
+				if (!value) return;
+
+				var valid = !isNaN(Number(value)) === schema.isNumber;
+
+				if (!valid) {
+					return "is " + (schema.isNumber === true ? "not " : "") + "a valid number";
+				}
+			},
+			isTime: function (value, schema, options, ctx) {
+				if (!value) return;
+
+				var valid = (moment(value, "HH:mm:ss").isValid() ? true : moment(value, "HH:mm").isValid() ? true : moment(value, "HH").isValid() ? true : false) === schema.isTime;
+
+				if (!valid) {
+					return "is " + (schema.isTime === true ? "not " : "") + "a valid time";
+				}
+			}
+		});
+
+		// Endpoints públicos sin autenticación
 		app.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
+
+		app.post('/api/login', this.login.bind(this));
 
 		app.post('/api/upload/signer', this.uploadSigner.bind(this));
 
