@@ -63,15 +63,6 @@ var localSchemas = {
 					type: "string",
 					required: true
 				}
-			},
-			body: {
-				type: "object",
-				properties: {
-					code: {
-						type: "string",
-						required: true
-					}
-				}
 			}
 		}
 	}
@@ -1021,11 +1012,11 @@ class Endpoints {
 
 	endpoint(req, res) {
 		var username = req.decoded ? req.decoded._doc.username : "";
-		var code = req.params.code || req.body.code;
-		var version = req.body.version || "v1";
+		var code = req.params.code; // || req.body.code;
+		var version = "v1"; //req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint;
-		var params = req.body.params;
+		var params = req.body; //req.body.params;
 		var client, type, tokens;
 
 		this.validate_username(username, code).then((permit) => {

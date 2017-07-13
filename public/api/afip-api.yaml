@@ -377,10 +377,7 @@ definitions:
         type: string
   Parametros:
     type: object
-    properties:
-      params:
-        type: object
-        description: "Objeto con los parámetros a enviar al endpoint, según documentación del mismo"
+    description: "Objeto con los parámetros a enviar al endpoint, según documentación del mismo"
   ResultEndpoint:
     type: object
     properties:
