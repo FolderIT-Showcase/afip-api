@@ -1073,8 +1073,6 @@ app.directive("compareTo", [function() {
 }]);
 
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-    $locationProvider.hashPrefix('');
-
     $routeProvider
         .when('/', {
         templateUrl: 'views/login.html',
@@ -1091,6 +1089,9 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
         .otherwise({
         redirectTo: '/'
     });
+    
+    $urlRouterProvider.when('/', '/login').otherwise('/login');
+    $locationProvider.hashPrefix('').html5Mode(true);
 }]);
 
 app.config(['toastrConfig', function(toastrConfig) {
