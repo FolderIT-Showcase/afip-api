@@ -1072,7 +1072,7 @@ app.directive("compareTo", [function() {
     };
 }]);
 
-app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', function($stateProvider, $urlRouterProvider, $locationProvider) {
+app.config(['$routeProvider', '$urlRouterProvider', '$locationProvider', function($routeProvider, $urlRouterProvider, $locationProvider) {
     $routeProvider
         .when('/', {
         templateUrl: 'views/login.html',
