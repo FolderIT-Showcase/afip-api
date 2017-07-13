@@ -16,11 +16,11 @@ consumes:
 produces:
   - "application/json; charset=utf-8"
 schemes:
-  - https
+  - http
 tags:
   - name: Login
     description: Autorización y obtención de tokens
-  - name: WSFE
+  - name: WSFEv1
     description: Endpoints referentes al servicio WSFE de AFIP
   - name: Servicios
     description: Endpoints de servicios generales
@@ -53,23 +53,30 @@ paths:
           $ref: '#/responses/BadRequest'
         '500':
           $ref: '#/responses/InternalError'
-  '/generarCae':
+  '/{codigo}/WSFEv1/FECAESolicitar':
     post:
       tags:
-        - WSFE
+        - WSFEv1
       summary: Solicitud de CAE de un comprobante
-      description: TODO
+      description: |
+        Endpoint de solicitud/generación de CAE de un comprobante de un cliente. Se debe especificar el código único del cliente que realizará la operación, además de todos los parámetros requeridos.
+        \
+        \
+        En caso de que ocurran errores de validaciones, los mismos se informarán en la respuesta del endpoint. También se informarán errores que genera AFIP, ya sea tanto sobre errores en datos, como errores de autorización (por ejemplo, si el cliente no está autorizado a realizar comprobantes letra A).
       operationId: generarCae
       produces:
         - application/json
       parameters:
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
         - in: "body"
           name: "body"
           required: true
           schema:
-            allOf:
-            - $ref: "#/definitions/Cliente"
-            - $ref: "#/definitions/Comprobante"
+            $ref: "#/definitions/Comprobante"
       responses:
           '200':
             $ref: '#/responses/RespuestaCAE'
@@ -81,23 +88,30 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
-  '/lastCbte':
+  '/{codigo}/WSFEv1/FECompUltimoAutorizado':
     post:
       tags:
-        - WSFE
+        - WSFEv1
       summary: Obtención del último comprobante autorizado
-      description: TODO
+      description: |
+        Este endpoint permite obtener el número del último comprobante autorizado por AFIP, cuyo CAE fue generado y asociado correctamente.
+        \
+        \
+        AFIP lleva sus contadores de comprobantes considerando **punto de venta** y **tipo de comprobante**, por CUIT.
       operationId: lastCbte
       produces:
         - application/json
       parameters:
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
         - in: "body"
           name: "body"
           required: true
           schema:
-            allOf:
-            - $ref: "#/definitions/Cliente"
-            - $ref: "#/definitions/UltimoComprobante"
+            $ref: "#/definitions/UltimoComprobante"
       responses:
           '200':
             $ref: '#/responses/RespuestaUltimoComprobante'
@@ -109,16 +123,28 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
-  '/{servicio}/{endpoint}':
+  '/{codigo}/{servicio}/{endpoint}':
     post:
       tags:
         - Servicios
       summary: Solicitud genérica a un servicio AFIP
-      description: TODO
+      description: |
+        POST genérico al endpoint de un servicio de AFIP. El servicio debe estar espeficado según la documentación de AFIP, y en el cuerpo del payload debe completarse tanto el código único del cliente (el cual emitirá la solicitud en representación) como los parámetros a enviar al endpoint AFIP.
+        \
+        \
+        Se debe utilizar una estructura JSON en los parámetros a enviar, realizando una traducción de la especificación SOAP en formato XML directamente a JSON.
+        \
+        \
+        Para más información respecto a inputs y outputs, se debe consultar la documentación AFIP pertinente o intentar interpretar los endpoints ofrecidos a través de la ruta /{servicio}/describe.
       operationId: genericEndpoint
       produces:
         - application/json
       parameters:
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
         - name: servicio
           in: path
           description: "Servicio AFIP a utilizar, ejemplo: wsfev1"
@@ -133,9 +159,7 @@ paths:
           name: "body"
           required: true
           schema:
-            allOf:
-            - $ref: "#/definitions/Cliente"
-            - $ref: "#/definitions/Parametros"
+            $ref: "#/definitions/Parametros"
       responses:
           '200':
             $ref: '#/responses/RespuestaEndpoint'
@@ -147,12 +171,51 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
-  '/{servicio}/{codigo}/refresh/token':
+  '/{codigo}/{servicio}/describe':
+    get:
+      tags:
+        - Servicios
+      summary: Descripción de los endpoints ofrecidos por un servicio AFIP
+      description: |
+        Descripción detallada de inputs, formatos, ouputs (etc.) de la especificación SOAP de los endpoints ofrecidos por un servicio de AFIP.
+        \
+        \
+        **ATENCIÓN**: el resultado de esta operación puede ser excesivamente grande, superando en casos los 100MB de datos.
+      operationId: describeService
+      produces:
+        - application/json
+      parameters:
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
+        - name: servicio
+          in: path
+          description: "Servicio AFIP a utilizar, ejemplo: wsfev1"
+          required: true
+          type: string
+      responses:
+          '200':
+            $ref: '#/responses/RespuestaDescribe'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
+  '/{codigo}/{servicio}/refresh/token':
     get:
       tags:
         - Servicios
       summary: Forzar la actualización del token de autorización para un servicio (WSAA)
-      description: TODO
+      description: |
+        A través de este endpoint se puede forzar la regeneración del token de acceso a un servicio AFIP. Este endpoint es especialmente útil si ocurre algún problema de expiración del mismo (error informado al realizar alguna operación con AFIP).
+        \
+        \
+        Se debe tener en consideración que AFIP suele permitir generar un token por minuto (aprox.), por CUIT.
       operationId: refreshToken
       produces:
         - application/json
@@ -196,6 +259,12 @@ responses:
       title: "RespuestaEndpoint"
       allOf:
         - $ref: '#/definitions/ResultEndpoint'
+  RespuestaDescribe:
+    description: Consulta exitosa
+    schema:
+      title: "RespuestaDescribe"
+      allOf:
+        - $ref: '#/definitions/ResultDescribe'
   RespuestaCAE:
     description: Consulta exitosa
     schema:
@@ -306,12 +375,6 @@ definitions:
         type: string
       password:
         type: string
-  Cliente:
-    type: object
-    properties:
-      code:
-        type: string
-        description: "Código único del cliente representado en la operación"
   Parametros:
     type: object
     properties:
@@ -319,6 +382,12 @@ definitions:
         type: object
         description: "Objeto con los parámetros a enviar al endpoint, según documentación del mismo"
   ResultEndpoint:
+    type: object
+    properties:
+      ResultGet:
+        type: object
+        description: "Objeto con la respuesta del endpoint AFIP"
+  ResultDescribe:
     type: object
     properties:
       ResultGet:
