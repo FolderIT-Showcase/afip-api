@@ -74,6 +74,64 @@ var localSchemas = {
 		}
 	}
 };
+
+// Definición de middlewares
+var authenticate = function (req, res, next) {
+	var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.headers['authorization'];
+	var username = req.body.username || req.query.username || req.headers['username'];
+	var password = req.body.password || req.query.password || req.headers['password'];
+
+	var verifyUser = function (username, password) {
+		var Users = mongoose.model('Users');
+
+		Users.findOne({
+			username: username
+		}).then(function (user) {
+			if (!user)
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
+
+			if (user.password != md5(password))
+				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
+
+			req.decoded = {
+				"_doc": user
+			};
+
+			next();
+		}, function (err) {
+			return res.status(500).json({ result: false, err: err.message });
+		});
+	}
+
+	if (token) {
+		jwt.verify(token, global.tokenSecret, function (err, decoded) {
+			if (err) {
+				//Verificar si es un token de Basic Auth
+				var user = auth(req);
+				if (user) {
+					verifyUser(user.name, user.pass);
+				} else {
+					logger.error(err);
+					return res.status(401).json({
+						result: false,
+						err: "No se pudo autenticar."
+					});
+				}
+			} else {
+				req.decoded = decoded;
+				next();
+			}
+		});
+	} else if (username && password) {
+		//Verificar username+password
+		verifyUser(username, password);
+	} else {
+		return res.status(401).json({
+			result: false,
+			err: "Por favor provea los datos para la autenticación."
+		});
+	}
+}
 var permission = function (req, res, next) {
 	var username = req.decoded ? req.decoded._doc.username : "";
 	var code = req.params.code || req.body.code;
