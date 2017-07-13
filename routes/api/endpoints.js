@@ -15,8 +15,65 @@ var _ = require('lodash'),
 	path = require('path'),
 	config = require('./../../config'),
 	auth = require('basic-auth'),
+	schemas = require('../../schemas'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 
+var localSchemas = {
+	get: {
+		"/api/:service/:code/refresh/token": {
+			params: {
+				service: {
+					type: "string",
+					required: true
+				},
+				code: {
+					type: "string",
+					required: true
+				}
+			}
+		},
+	},
+	post: {
+		"/api/:service/describe": {
+			params: {
+				service: {
+					type: "string",
+					required: true
+				}
+			},
+			body: {
+				type: "object",
+				properties: {
+					code: {
+						type: "string",
+						required: true
+					}
+				}
+			}
+		},
+		"/api/:service/:endpoint": {
+			params: {
+				service: {
+					type: "string",
+					required: true
+				},
+				endpoint: {
+					type: "string",
+					required: true
+				}
+			},
+			body: {
+				type: "object",
+				properties: {
+					code: {
+						type: "string",
+						required: true
+					}
+				}
+			}
+		}
+	}
+};
 class Endpoints {
 	constructor(app) {
 		//Autenticacion
