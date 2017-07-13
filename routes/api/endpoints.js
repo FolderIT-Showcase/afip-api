@@ -306,57 +306,59 @@ class Endpoints {
 
 		app.post('/api/upload/signer', this.uploadSigner.bind(this));
 
-		//Verificacion de token o username+password
-		app.use(this.authenticate.bind(this));
+		// Endpoints públicos con autenticación
+		app.use('/api/*', authenticate);
 
-		app.post('/api/:service/describe', this.describe.bind(this));
+		app.get('/api/cbteTipo/:code', permission, this.getCbteTipo.bind(this));
 
-		app.post('/api/lastCbte', this.lastCbte.bind(this));
+		app.get('/api/:code/:service/refresh/token', validate, permission, this.recreate_token.bind(this));
 
-		app.get('/api/:service/:code/refresh/token', this.recreate_token.bind(this));
+		app.post('/api/lastCbte', permission, this.lastCbte.bind(this));
+		app.post('/api/:code/WSFEv1/FECompUltimoAutorizado', validate, permission, this.lastCbte.bind(this));
 
-		// app.get('/api/:code/flush/tokens', this.flush_tokens.bind(this));
+		app.post('/api/generarCae', permission, this.generar_cae.bind(this));
+		app.post('/api/:code/WSFEv1/FECAESolicitar', validate, permission, this.generar_cae.bind(this));
 
-		app.post('/api/:service/:endpoint', this.endpoint.bind(this));
+		app.post('/api/generarCaex', permission, this.generar_caex.bind(this));
 
-		app.post('/api/generarCae', this.generar_cae.bind(this));
+		app.post('/api/genRSA', permission, this.genRSA.bind(this));
 
-		app.post('/api/generarCaex', this.generar_caex.bind(this));
+		app.get('/api/:code/:service/describe', validate, permission, this.describe.bind(this));
 
-		app.get('/api/cbteTipo/:code', this.getCbteTipo.bind(this));
+		app.post('/api/:service/:endpoint', validate, permission, this.endpoint.bind(this));
 
-		app.post('/api/genRSA', this.genRSA.bind(this));
+		app.use(jsonSchemaValidation);
 
-		//Verificación de permisos administrativos
-		app.use(this.administrative.bind(this));
+		// Endpoints privados con autenticación (administrativos)
+		app.use('/api/admin/*', administrative);
 
-		app.get('/api/getClients', this.getClients.bind(this));
+		app.get('/api/admin/getClients', this.getClients.bind(this));
 
-		app.get('/api/getUsers', this.getUsers.bind(this));
+		app.get('/api/admin/getUsers', this.getUsers.bind(this));
 
-		app.get('/api/transactions/:code', this.getTransactions.bind(this));
+		app.get('/api/admin/transactions/:code', this.getTransactions.bind(this));
 
-		app.get('/api/permissions/:username', this.getUserPermissions.bind(this));
+		app.get('/api/admin/permissions/:username', this.getUserPermissions.bind(this));
 
-		app.post('/api/newUser', this.newUser.bind(this));
+		app.post('/api/admin/newUser', this.newUser.bind(this));
 
-		app.post('/api/newPermit', this.newPermit.bind(this));
+		app.post('/api/admin/newPermit', this.newPermit.bind(this));
 
-		app.post('/api/newClient', this.newClient.bind(this));
+		app.post('/api/admin/newClient', this.newClient.bind(this));
 
-		app.post('/api/editClient', this.editClient.bind(this));
+		app.post('/api/admin/editClient', this.editClient.bind(this));
 
-		app.post('/api/editUser', this.editUser.bind(this));
+		app.post('/api/admin/editUser', this.editUser.bind(this));
 
-		app.post('/api/editPermit', this.editPermit.bind(this));
+		app.post('/api/admin/editPermit', this.editPermit.bind(this));
 
-		app.post('/api/resetPassword', this.resetPassword.bind(this));
+		app.post('/api/admin/resetPassword', this.resetPassword.bind(this));
 
-		app.post('/api/removeClient', this.removeClient.bind(this));
+		app.post('/api/admin/removeClient', this.removeClient.bind(this));
 
-		app.post('/api/removePermit', this.removePermit.bind(this));
+		app.post('/api/admin/removePermit', this.removePermit.bind(this));
 
-		app.post('/api/removeUser', this.removeUser.bind(this));
+		app.post('/api/admin/removeUser', this.removeUser.bind(this));
 
 		this.clients = {};
 	}
