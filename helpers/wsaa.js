@@ -153,7 +153,7 @@ class Tokens {
 				var tomorrow = new Date();
 
 				tomorrow.setDate(date.getDate() + 1);
-				tomorrow.setHours(date.getHours() - 6);
+				tomorrow.setHours(date.getHours() - 18);
 
 				dates = {
 					generationTime: this.formatDate(date),
