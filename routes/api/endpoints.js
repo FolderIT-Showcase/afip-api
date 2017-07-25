@@ -22,7 +22,7 @@ var _ = require('lodash'),
 
 var localSchemas = {
 	get: {
-		"/api/:service/:code/refresh/token": {
+		"/api/:code/:service/refresh/token": {
 			params: {
 				service: {
 					type: "string",
@@ -36,9 +36,13 @@ var localSchemas = {
 		},
 	},
 	post: {
-		"/api/:service/describe": {
+		"/api/:code/:service/describe": {
 			params: {
 				service: {
+					type: "string",
+					required: true
+				},
+				code: {
 					type: "string",
 					required: true
 				}
@@ -53,13 +57,17 @@ var localSchemas = {
 				}
 			}
 		},
-		"/api/:service/:endpoint": {
+		"/api/:code/:service/:endpoint": {
 			params: {
 				service: {
 					type: "string",
 					required: true
 				},
 				endpoint: {
+					type: "string",
+					required: true
+				},
+				code: {
 					type: "string",
 					required: true
 				}
