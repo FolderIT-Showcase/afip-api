@@ -20,6 +20,8 @@ schemes:
 tags:
   - name: Login
     description: Autorización y obtención de tokens
+  - name: Status
+    description: Chequeo de estado
   - name: WSFEv1
     description: Endpoints referentes al servicio WSFE de AFIP
   - name: Servicios
@@ -49,6 +51,23 @@ paths:
           $ref: '#/responses/Unauthorized'
         '403':
           $ref: '#/responses/Forbidden'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalError'
+  '/status':
+    get:
+      tags:
+        - Status
+      summary: Chequeo de estado de la API
+      description: >-
+        Este endpoint devolverá el estado actual de la API
+      operationId: status
+      produces:
+        - application/json
+      responses:
+        '200':
+          $ref: '#/responses/Status'
         '400':
           $ref: '#/responses/BadRequest'
         '500':
@@ -253,6 +272,12 @@ responses:
             token:
               type: string
               description: "El token debe enviarse en las propiedades de autenticación del header de todas las solicitudes"
+  Status:
+    description: Consulta de estado exitosa
+    schema:
+      title: "Status"
+      allOf:
+        - $ref: '#/definitions/Response'
   RespuestaEndpoint:
     description: Consulta exitosa
     schema:

@@ -301,6 +301,8 @@ class Endpoints {
 		// Endpoints públicos sin autenticación
 		app.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
 
+		app.get('/api/status', this.status.bind(this));
+
 		app.post('/api/login', this.login.bind(this));
 
 		app.post('/api/upload/signer', this.uploadSigner.bind(this));
@@ -1120,6 +1122,12 @@ class Endpoints {
 	/*
 	 * Endpoints de autenticación
 	 */
+
+	status(req, res) {
+		return res.json({
+			result: true
+		});
+	}
 
 	login(req, res) {
 		var Users = mongoose.model('Users');
