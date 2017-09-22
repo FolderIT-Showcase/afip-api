@@ -983,6 +983,10 @@ class Endpoints {
 				afipRequest = _.merge(afipRequest, params);
 
 				soapClient[endpoint](afipRequest, (err, result) => {
+					if (err) {
+						throw err;
+					}
+
 					if (saveTransaction) {
 						this.generateTransaction({
 							username: username,
@@ -1058,6 +1062,10 @@ class Endpoints {
 			}
 
 			soapClient[endpoint](afipRequest, (err, result) => {
+				if (err) {
+					throw err;
+				}
+
 				this.generateTransaction({
 					username: req.decoded ? req.decoded._doc.username : "",
 					code: code,
