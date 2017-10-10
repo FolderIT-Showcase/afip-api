@@ -16,7 +16,7 @@ consumes:
 produces:
   - "application/json; charset=utf-8"
 schemes:
-  - http
+  - https
 tags:
   - name: Login
     description: Autorización y obtención de tokens
