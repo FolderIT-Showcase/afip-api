@@ -29,7 +29,9 @@ module.exports = {
         },
         PtoVta: {
             type: "number",
-            required: true
+            required: true,
+            minimum: 1,
+            maximum: 9998
         },
         DocTipo: {
             type: "number",
