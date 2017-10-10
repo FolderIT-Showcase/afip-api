@@ -25,10 +25,11 @@ module.exports = {
         },
         DocNro: {
             type: "string",
-            required: true
+            required: true,
+            minLength: 1
         },
         PtoVta: {
-            type: "integer",
+            type: "number",
             required: true,
             minimum: 1,
             maximum: 9998
@@ -96,7 +97,9 @@ module.exports = {
     FECompUltimoAutorizado: {
         PtoVta: {
             type: "number",
-            required: true
+            required: true,
+            minimum: 1,
+            maximum: 9998
         },
         CbteTipo: {
             type: "number",
