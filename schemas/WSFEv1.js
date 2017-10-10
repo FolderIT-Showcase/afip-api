@@ -28,7 +28,7 @@ module.exports = {
             required: true
         },
         PtoVta: {
-            type: "number",
+            type: "integer",
             required: true,
             minimum: 1,
             maximum: 9998
