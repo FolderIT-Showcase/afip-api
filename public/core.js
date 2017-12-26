@@ -1069,7 +1069,10 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
                 if (res.data.result) {
                     $localStorage.username = $scope.formData.username;
                     $localStorage.jwt = res.data.token;
-                    $localStorage.jwtRefresh = res.data.refreshToken;
+
+                    if ($scope.formData.rememberMe === true) {
+                        $localStorage.jwtRefresh = res.data.refreshToken;
+                    }
 
                     $rootScope.loggedIn = true;
 

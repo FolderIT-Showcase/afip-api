@@ -11,19 +11,14 @@
                 <input type="password" id="password" class="form-control" placeholder="Contraseña" required="" ng-model="formData.password">
             </div>
             <div class="form-group">
-                <div class="checkbox checkbox-primary disabled">
-                    <input type="checkbox" disabled value="remember-me">
-                    <label>Recordarme</label>
+                <div class="checkbox checkbox-primary">
+                    <input id="remember-me" type="checkbox" ng-model="formData.rememberMe">
+                    <label for="remember-me">Recordarme</label>
                 </div>
             </div>
             <div class="form-group">
-                <div vc-recaptcha
-                     ng-model="formData.rcResponse"
-                     theme="'light'"
-                     key="recaptcha.key"
-                     on-create="setWidgetId(widgetId)"
-                     on-success="setResponse(response)"
-                     on-expire="cbExpiration()"></div>
+                <div vc-recaptcha ng-model="formData.rcResponse" theme="'light'" key="recaptcha.key" on-create="setWidgetId(widgetId)" on-success="setResponse(response)"
+                    on-expire="cbExpiration()"></div>
             </div>
             <button class="btn btn-lg btn-primary btn-block" type="submit" ng-disabled="loginForm.$invalid">Ingresar</button>
         </form>
