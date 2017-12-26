@@ -55,6 +55,34 @@ paths:
           $ref: '#/responses/BadRequest'
         '500':
           $ref: '#/responses/InternalError'
+  '/token':
+    post:
+      tags:
+        - Login
+      summary: Refresh de token de autenticación
+      description: >-
+        Se debe enviar un usuario y refresh token válidos.
+      operationId: login
+      produces:
+        - application/json
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Datos de usuario a autenticar"
+          required: true
+          schema:
+            $ref: "#/definitions/RefreshToken"
+      responses:
+        '200':
+          $ref: '#/responses/RefreshLogin'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalError'
   '/status':
     get:
       tags:
@@ -272,6 +300,20 @@ responses:
             token:
               type: string
               description: "El token debe enviarse en las propiedades de autenticación del header de todas las solicitudes"
+            refreshToken:
+              type: string
+              description: "Token para utilizar al refrescar la autenticación"
+  RefreshLogin:
+    description: Refresh de token exitoso
+    schema:
+      title: "RefreshLogin"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            token:
+              type: string
+              description: "El token debe enviarse en las propiedades de autenticación del header de todas las solicitudes"
   Status:
     description: Consulta de estado exitosa
     schema:
@@ -399,6 +441,13 @@ definitions:
       username:
         type: string
       password:
+        type: string
+  RefreshToken:
+    type: object
+    properties:
+      username:
+        type: string
+      refreshToken:
         type: string
   Parametros:
     type: object
