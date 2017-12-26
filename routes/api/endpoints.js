@@ -18,7 +18,8 @@ var _ = require('lodash'),
 	auth = require('basic-auth'),
 	addSchemaProperties = require('express-jsonschema').addSchemaProperties,
 	schemas = require('../../schemas'),
-	logger = require('tracer').colorConsole(global.loggerFormat);
+	logger = require('tracer').colorConsole(global.loggerFormat),
+	randtoken = require('rand-token');
 
 var localSchemas = {
 	get: {
@@ -304,6 +305,8 @@ class Endpoints {
 		app.get('/api/status', this.status.bind(this));
 
 		app.post('/api/login', this.login.bind(this));
+
+		app.post('/api/token', this.token.bind(this));
 
 		app.post('/api/upload/signer', this.uploadSigner.bind(this));
 
@@ -1155,9 +1158,15 @@ class Endpoints {
 
 			// Si no proporciona un reCAPTCHA, se lo identifica como usuario externo y se lo autentica
 			if (!req.body.rcResponse) {
+				refreshToken = randtoken.uid(256);
+
+				user.refreshToken = refreshToken;
+				user.save();
+
 				return res.json({
 					result: true,
-					token: token
+					token: token,
+					refreshToken: refreshToken
 				});
 			}
 
@@ -1194,6 +1203,29 @@ class Endpoints {
 				}
 			});
 		}, function (err) {
+			return res.status(500).json({ result: false, err: err.message });
+		});
+	}
+
+	token(req, res) {
+		const Users = mongoose.model('Users');
+
+		Users.findOne({
+			username: req.body.username,
+			refreshToken: req.body.refreshToken
+		}).then((user) => {
+			if (!user)
+				return res.status(401).json({ result: false, err: "Usuario inexistente ó token inválido." });
+
+			const token = jwt.sign(user, global.tokenSecret, {
+				expiresIn: 60 * 60 * 24 // Expirar el token en 24 horas
+			});
+
+			return res.json({
+				result: true,
+				token: token
+			});
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
 	}

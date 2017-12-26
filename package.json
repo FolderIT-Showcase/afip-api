@@ -19,6 +19,7 @@
     "ntp-client": "^0.5.3",
     "openssl-wrapper": "^0.3.4",
     "pify": "^2.3.0",
+    "rand-token": "^0.4.0",
     "request": "^2.81.0",
     "serve-favicon": "^2.4.2",
     "strong-soap": "^1.2.3",

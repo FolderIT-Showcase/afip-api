@@ -9,7 +9,8 @@ var UsersSchema = new Schema({
   admin: {
     type: Boolean,
     default: false
-  }
+  },
+  refreshToken: String
 });
 
 mongoose.model('Users', UsersSchema);
