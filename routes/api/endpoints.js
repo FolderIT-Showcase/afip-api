@@ -15,6 +15,10 @@ var _ = require('lodash'),
 	config = require('./../../config'),
 	auth = require('basic-auth'),
 	addSchemaProperties = require('express-jsonschema').addSchemaProperties,
+	express = require('express'),
+	router = express.Router({
+		caseSensitive: true
+	}),
 	schemas = require('../../schemas'),
 	logger = require('tracer').colorConsole(global.loggerFormat),
 	randtoken = require('rand-token');
@@ -296,69 +300,74 @@ class Endpoints {
 		});
 
 		// Endpoints públicos sin autenticación
-		app.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
+		router.get('/api/consultarCuit/:cuit', this.consultar_cuit.bind(this));
 
-		app.get('/api/status', this.status.bind(this));
+		router.get('/api/status', this.status.bind(this));
 
-		app.post('/api/login', this.login.bind(this));
+		router.post('/api/login', this.login.bind(this));
 
-		app.post('/api/token', this.token.bind(this));
+		router.post('/api/token', this.token.bind(this));
 
-		app.post('/api/upload/signer', this.uploadSigner.bind(this));
+		router.post('/api/upload/signer', this.uploadSigner.bind(this));
 
 		// Endpoints públicos con autenticación
-		app.use('/api/*', authenticate);
+		router.use('/api/*', authenticate);
 
-		app.get('/api/cbteTipo/:code', permission, this.getCbteTipo.bind(this));
+		router.get('/api/cbteTipo/:code', permission, this.getCbteTipo.bind(this));
 
-		app.get('/api/:code/:service/refresh/token', validate, permission, this.recreate_token.bind(this));
+		router.get('/api/:code/:service/refresh/token', validate, permission, this.recreate_token.bind(this));
 
-		app.post('/api/lastCbte', permission, this.lastCbte.bind(this));
-		app.post('/api/:code/WSFEv1/FECompUltimoAutorizado', validate, permission, this.lastCbte.bind(this));
+		router.post('/api/lastCbte', permission, this.lastCbte.bind(this));
+		router.post('/api/:code/WSFEv1/FECompUltimoAutorizado', validate, permission, this.lastCbte.bind(this));
 
-		app.post('/api/generarCae', permission, this.generar_cae.bind(this));
-		app.post('/api/:code/WSFEv1/FECAESolicitar', validate, permission, this.generar_cae.bind(this));
+		router.post('/api/compConsultar', permission, this.compConsultar.bind(this));
+		router.post('/api/:code/WSFEv1/FECompConsultar', validate, permission, this.compConsultar.bind(this));
 
-		app.post('/api/generarCaex', permission, this.generar_caex.bind(this));
+		router.post('/api/generarCae', permission, this.generar_cae.bind(this));
+		router.post('/api/:code/WSFEv1/FECAESolicitar', validate, permission, this.generar_cae.bind(this));
 
-		app.post('/api/genRSA', permission, this.genRSA.bind(this));
+		router.post('/api/generarCaex', permission, this.generar_caex.bind(this));
 
-		app.get('/api/:code/:service/describe', validate, permission, this.describe.bind(this));
+		router.post('/api/genRSA', permission, this.genRSA.bind(this));
 
-		app.post('/api/:code/:service/:endpoint', validate, permission, this.endpoint.bind(this));
+		router.get('/api/:code/:service/describe', validate, permission, this.describe.bind(this));
 
-		app.use(jsonSchemaValidation);
+		router.post('/api/:code/:service/:endpoint', validate, permission, this.endpoint.bind(this));
+
+		router.use(jsonSchemaValidation);
 
 		// Endpoints privados con autenticación (administrativos)
-		app.use('/api/admin/*', administrative);
+		router.use('/api/admin/*', administrative);
 
-		app.get('/api/admin/getClients', this.getClients.bind(this));
+		router.get('/api/admin/getClients', this.getClients.bind(this));
 
-		app.get('/api/admin/getUsers', this.getUsers.bind(this));
+		router.get('/api/admin/getUsers', this.getUsers.bind(this));
 
-		app.get('/api/admin/transactions/:code', this.getTransactions.bind(this));
+		router.get('/api/admin/transactions/:code', this.getTransactions.bind(this));
 
-		app.get('/api/admin/permissions/:username', this.getUserPermissions.bind(this));
+		router.get('/api/admin/permissions/:username', this.getUserPermissions.bind(this));
 
-		app.post('/api/admin/newUser', this.newUser.bind(this));
+		router.post('/api/admin/newUser', this.newUser.bind(this));
 
-		app.post('/api/admin/newPermit', this.newPermit.bind(this));
+		router.post('/api/admin/newPermit', this.newPermit.bind(this));
 
-		app.post('/api/admin/newClient', this.newClient.bind(this));
+		router.post('/api/admin/newClient', this.newClient.bind(this));
 
-		app.post('/api/admin/editClient', this.editClient.bind(this));
+		router.post('/api/admin/editClient', this.editClient.bind(this));
 
-		app.post('/api/admin/editUser', this.editUser.bind(this));
+		router.post('/api/admin/editUser', this.editUser.bind(this));
 
-		app.post('/api/admin/editPermit', this.editPermit.bind(this));
+		router.post('/api/admin/editPermit', this.editPermit.bind(this));
 
-		app.post('/api/admin/resetPassword', this.resetPassword.bind(this));
+		router.post('/api/admin/resetPassword', this.resetPassword.bind(this));
 
-		app.post('/api/admin/removeClient', this.removeClient.bind(this));
+		router.post('/api/admin/removeClient', this.removeClient.bind(this));
 
-		app.post('/api/admin/removePermit', this.removePermit.bind(this));
+		router.post('/api/admin/removePermit', this.removePermit.bind(this));
 
-		app.post('/api/admin/removeUser', this.removeUser.bind(this));
+		router.post('/api/admin/removeUser', this.removeUser.bind(this));
+
+		app.use(router);
 
 		this.clients = {};
 	}
@@ -678,6 +687,55 @@ class Endpoints {
 				res.status(400).json(resObj);
 			} else {
 				resObj.data = result.CbteNro;
+				res.json(resObj);
+			}
+		}).catch((err) => {
+			logger.error(err);
+			res.status(500).json({
+				result: false,
+				err: err.message
+			});
+		});
+	}
+
+	compConsultar(req, res) {
+		var username = req.decoded ? req.decoded._doc.username : "";
+		var code = req.params.code || req.body.code;
+		var version = "v1";
+		var service = "wsfev1";
+		var endpoint = "FECompConsultar";
+
+		var params = {
+			"FeCompConsReq": {
+				"PtoVta": req.body.PtoVta,
+				"CbteTipo": req.body.CbteTipo,
+				"CbteNro": req.body.CbteNro
+			}
+		};
+
+		logger.debug(params);
+
+		this.afip({
+			username: username,
+			code: code,
+			version: version,
+			service: service,
+			endpoint: endpoint,
+			params: params
+		}).then((result) => {
+			var resObj = {
+				result: true
+			};
+
+			if (result.Errors) {
+				var errs = result.Errors.Err;
+
+				resObj.result = false;
+				resObj.err = errs.length ? errs : [errs];
+
+				res.status(400).json(resObj);
+			} else {
+				resObj.data = result.ResultGet;
 				res.json(resObj);
 			}
 		}).catch((err) => {
