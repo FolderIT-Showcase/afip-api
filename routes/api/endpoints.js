@@ -1191,9 +1191,15 @@ class Endpoints {
 				body = JSON.parse(body);
 
 				if (body.success === true) {
+					refreshToken = randtoken.uid(256);
+
+					user.refreshToken = refreshToken;
+					user.save();
+
 					res.json({
 						result: true,
-						token: token
+						token: token,
+						refreshToken: refreshToken
 					});
 				} else {
 					res.status(401).json({
