@@ -170,6 +170,38 @@ paths:
             $ref: '#/responses/BadRequest'
           '500':
             $ref: '#/responses/InternalError'
+  '/{codigo}/WSFEv1/FECompConsultar':
+    post:
+      tags:
+        - WSFEv1
+      summary: Obtención de datos del comprobante indicado
+      description: |
+        Este endpoint permite obtener los datos almacenados en AFIP del comprobante indicado según punto de venta, tipo de comprobante (según tabla AFIP) y número de comprobante.
+      operationId: compConsultar
+      produces:
+        - application/json
+      parameters:
+        - name: codigo
+          in: path
+          description: "Código único del cliente"
+          required: true
+          type: string
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ConsultaComprobante"
+      responses:
+          '200':
+            $ref: '#/responses/RespuestaConsultaComprobante'
+          '401':
+            $ref: '#/responses/Unauthorized'
+          '403':
+            $ref: '#/responses/Forbidden'
+          '400':
+            $ref: '#/responses/BadRequest'
+          '500':
+            $ref: '#/responses/InternalError'
   '/{codigo}/{servicio}/{endpoint}':
     post:
       tags:
@@ -352,6 +384,16 @@ responses:
           properties:
             data:
               $ref: '#/definitions/NroComprobante'
+  RespuestaConsultaComprobante:
+    description: Consulta exitosa
+    schema:
+      title: "RespuestaConsultaComprobante"
+      allOf:
+        - $ref: '#/definitions/Response'
+        - type: object
+          properties:
+            data:
+              type: object
   TokenActualizado:
     description: Consulta exitosa
     schema:
@@ -584,6 +626,19 @@ definitions:
       CbteTipo:
         type: integer
         description: "ID del tipo de comprobante, según tablas de AFIP"
+  ConsultaComprobante:
+    type: object
+    required: [ PtoVta, CbteTipo, CbteNro ]
+    properties:
+      PtoVta:
+        type: integer
+        description: "Punto de venta"
+      CbteTipo:
+        type: integer
+        description: "ID del tipo de comprobante, según tablas de AFIP"
+      CbteNro:
+        type: integer
+        description: "Número de comprobante"
   NroComprobante:
     type: integer
     format: int64
