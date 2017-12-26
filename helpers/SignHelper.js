@@ -1,6 +1,5 @@
 var pify = require("pify"),
     logger = require('tracer').colorConsole(global.loggerFormat),
-    os = require('os'),
     openssl = pify(require('openssl-wrapper').exec),
     csrgen = pify(require('csr-gen'));
 
@@ -15,7 +14,7 @@ var pify = require("pify"),
  */
 
 function sign(options) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(((resolve, reject) => {
         options = options || {};
 
         if (!options.content)
@@ -37,7 +36,7 @@ function sign(options) {
         };
 
         if (options.password) {
-            ssl.passin = "pass:" + options.password;
+            ssl.passin = `pass:${options.password}`;
         }
 
         openssl('smime.sign', content, ssl).then((buffer) => {
@@ -49,7 +48,7 @@ function sign(options) {
                 message: "No se pudo validar el certificado del cliente. Contáctese con el Administrador del sistema de Facturación Electrónica."
             });
         });
-    });
+    }));
 }
 
 function gencsr(options) {
@@ -78,7 +77,7 @@ function gencsr(options) {
             password: '',
             company: options.company,
             email: options.email,
-            serialNumber: 'CUIT ' + options.cuit
+            serialNumber: `CUIT ${options.cuit}`
         };
 
         csrgen(options.domain, ssl).then((keys) => {
@@ -96,4 +95,4 @@ function gencsr(options) {
 module.exports = {
     sign: sign,
     gencsr: gencsr
-}
+};

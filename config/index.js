@@ -28,4 +28,4 @@ module.exports = {
         }],
         dateformat: "yyyy-mm-dd HH:MM:ss.L"
     }
-}
+};

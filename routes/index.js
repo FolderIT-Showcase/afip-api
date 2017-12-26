@@ -1,5 +1,4 @@
-var _ = require('lodash'),
-	cors = require('cors'),
+var cors = require('cors'),
 	bodyParser = require('body-parser'),
 	fileUpload = require('express-fileupload');
 
@@ -13,7 +12,7 @@ exports = module.exports = function (app) {
 	app.use(fileUpload());
 
 	// Inicialización del Frontend
-	app.get('/', function (req, res) {
+	app.get('/', (req, res) => {
 		res.sendfile('./public/index.html');
 	});
 

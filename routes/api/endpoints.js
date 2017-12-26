@@ -10,9 +10,7 @@ var _ = require('lodash'),
 	md5 = require('md5'),
 	jwt = require('jsonwebtoken'),
 	moment = require('moment'),
-	_ = require('lodash'),
 	fs = require('fs'),
-	mkdirp = require('mkdirp'),
 	path = require('path'),
 	config = require('./../../config'),
 	auth = require('basic-auth'),
@@ -88,11 +86,11 @@ var authenticate = function (req, res, next) {
 
 		Users.findOne({
 			username: username
-		}).then(function (user) {
+		}).then((user) => {
 			if (!user)
 				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
-			if (user.password != md5(password))
+			if (user.password !== md5(password))
 				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 			req.decoded = {
@@ -100,13 +98,13 @@ var authenticate = function (req, res, next) {
 			};
 
 			next();
-		}, function (err) {
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
-	}
+	};
 
 	if (token) {
-		jwt.verify(token, global.tokenSecret, function (err, decoded) {
+		jwt.verify(token, global.tokenSecret, (err, decoded) => {
 			if (err) {
 				//Verificar si es un token de Basic Auth
 				var user = auth(req);
@@ -133,7 +131,7 @@ var authenticate = function (req, res, next) {
 			err: "Por favor provea los datos para la autenticación."
 		});
 	}
-}
+};
 
 var administrative = function (req, res, next) {
 	var username = req.decoded ? req.decoded._doc.username : "";
@@ -157,7 +155,7 @@ var administrative = function (req, res, next) {
 			err: err.message
 		});
 	});
-}
+};
 
 var validate = function (req, res, next) {
 	var path = req.route.path;
@@ -179,9 +177,7 @@ var validate = function (req, res, next) {
 		path = path.replace("/api/:code/", "");
 		path = path.replace("/api/", "");
 
-		logger.debug(path);
-
-		if (path.split("/").length == 2) {
+		if (path.split("/").length === 2) {
 			var service = path.split("/")[0];
 			var endpoint = path.split("/")[1];
 
@@ -199,7 +195,7 @@ var validate = function (req, res, next) {
 			next();
 		}
 	}
-}
+};
 
 var permission = function (req, res, next) {
 	var username = req.decoded ? req.decoded._doc.username : "";
@@ -242,7 +238,7 @@ var permission = function (req, res, next) {
 			err: err.message
 		});
 	});
-}
+};
 
 var jsonSchemaValidation = function (err, req, res, next) {
 	var responseData;
@@ -265,36 +261,36 @@ var jsonSchemaValidation = function (err, req, res, next) {
 	} else {
 		next(err);
 	}
-}
+};
 
 class Endpoints {
 	constructor(app) {
 		addSchemaProperties({
-			isDate: function (value, schema, options, ctx) {
+			isDate: function (value, schema) {
 				if (!value) return;
 
 				var valid = moment(value).isValid() === schema.isDate;
 
 				if (!valid) {
-					return "is " + (schema.isDate === true ? "not " : "") + "a valid date";
+					return `is ${schema.isDate === true ? "not " : ""}a valid date`;
 				}
 			},
-			isNumber: function (value, schema, options, ctx) {
+			isNumber: function (value, schema) {
 				if (!value) return;
 
 				var valid = !isNaN(Number(value)) === schema.isNumber;
 
 				if (!valid) {
-					return "is " + (schema.isNumber === true ? "not " : "") + "a valid number";
+					return `is ${schema.isNumber === true ? "not " : ""}a valid number`;
 				}
 			},
-			isTime: function (value, schema, options, ctx) {
+			isTime: function (value, schema) {
 				if (!value) return;
 
 				var valid = (moment(value, "HH:mm:ss").isValid() ? true : moment(value, "HH:mm").isValid() ? true : moment(value, "HH").isValid() ? true : false) === schema.isTime;
 
 				if (!valid) {
-					return "is " + (schema.isTime === true ? "not " : "") + "a valid time";
+					return `is ${schema.isTime === true ? "not " : ""}a valid time`;
 				}
 			}
 		});
@@ -447,11 +443,11 @@ class Endpoints {
 				_.forEach(obs, (e) => {
 					var b = new Buffer(e.ErrMsg, 'binary').toString('utf8').replace(/'/g, "").replace(/"/g, "");
 
-					errs.push(e.ErrCode + " - " + b);
+					errs.push(`${e.ErrCode} - ${b}`);
 				});
 
 				resObj.result = false;
-				resObj.err = (obs.length > 1 ? "Ocurrieron " + obs.length + " errores" : "Ocurrió 1 error") + " al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.";
+				resObj.err = `${obs.length > 1 ? `Ocurrieron ${obs.length} errores` : "Ocurrió 1 error"} al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.`;
 				resObj.errDetails = errs;
 
 				res.status(400).json(resObj);
@@ -491,7 +487,7 @@ class Endpoints {
 
 		if (!idIVA) {
 			// Tolerancia de 0.1 decimales
-			if (porcIVA == 0) idIVA = 3;
+			if (porcIVA === 0) idIVA = 3;
 			if (porcIVA >= 2.4 && porcIVA <= 2.6) idIVA = 9;
 			if (porcIVA >= 4.9 && porcIVA <= 5.1) idIVA = 8;
 			if (porcIVA >= 10.4 && porcIVA <= 10.6) idIVA = 4;
@@ -502,7 +498,7 @@ class Endpoints {
 		if (!idIVA) {
 			return res.status(400).json({
 				result: false,
-				err: "El importe de IVA no se corresponde a ningún porcentaje de IVA ofrecido por AFIP: " + porcIVA
+				err: `El importe de IVA no se corresponde a ningún porcentaje de IVA ofrecido por AFIP: ${porcIVA}`
 			});
 		}
 
@@ -559,7 +555,7 @@ class Endpoints {
 					}]
 				}
 			}
-		}
+		};
 
 		if (!tributos.length) {
 			delete params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Tributos"];
@@ -604,11 +600,11 @@ class Endpoints {
 				_.forEach(obs, (e) => {
 					var b = new Buffer(e.Msg, 'binary').toString('utf8').replace(/'/g, "").replace(/"/g, "");
 
-					errs.push(e.Code + " - " + b);
+					errs.push(`${e.Code} - ${b}`);
 				});
 
 				resObj.result = false;
-				resObj.err = (obs.length > 1 ? "Ocurrieron " + obs.length + " errores" : "Ocurrió 1 error") + " al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.";
+				resObj.err = `${obs.length > 1 ? `Ocurrieron ${obs.length} errores` : "Ocurrió 1 error"} al intentar procesar la solicitud. Revise los detalles o póngase en contacto con el Administrador.`;
 				resObj.errDetails = errs;
 
 				res.status(400).json(resObj);
@@ -627,8 +623,8 @@ class Endpoints {
 	consultar_cuit(req, res) {
 		var cuit = req.params.cuit;
 
-		request('https://soa.afip.gob.ar/sr-padron/v2/persona/' + String(cuit), function (err, response, body) {
-			if (!err && response.statusCode == 200) {
+		request(`https://soa.afip.gob.ar/sr-padron/v2/persona/${String(cuit)}`, (err, response, body) => {
+			if (!err && response.statusCode === 200) {
 				if (JSON.parse(body).data) {
 					res.json({
 						result: true,
@@ -712,7 +708,7 @@ class Endpoints {
 		var code = req.params.code || req.body.code;
 		var client;
 
-		this.validate_username(username, code).then((permit) => {
+		this.validate_username(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
@@ -722,7 +718,7 @@ class Endpoints {
 				email: client.email,
 				domain: client.code,
 				cuit: client.cuit,
-			}
+			};
 
 			return SignHelper.gencsr(options);
 		}).then((keys) => {
@@ -862,15 +858,15 @@ class Endpoints {
 
 	createClientForService(type, version, service, endpoint) {
 		// Parsear servicios
-		if (service == 'ws_sr_padron_a10') service = 'sr-padron';
-		if (service == 'ws_sr_padron_a5') service = 'sr-padron';
-		if (service == 'ws_sr_padron_a3') service = 'sr-padron';
+		if (service === 'ws_sr_padron_a10') service = 'sr-padron';
+		if (service === 'ws_sr_padron_a5') service = 'sr-padron';
+		if (service === 'ws_sr_padron_a3') service = 'sr-padron';
 
 		return new Promise((resolve, reject) => {
 			if (this.clients[type] && this.clients[type][version] && this.clients[type][version][service]) {
 				resolve(this.clients[type][version][service]);
 			} else {
-				var wsdl = path.join(global.appRoot, 'wsdl', service + '.xml');
+				var wsdl = path.join(global.appRoot, 'wsdl', `${service}.xml`);
 
 				if (!fs.existsSync(wsdl)) {
 					wsdl = AfipURLs.getService(type, version, service, endpoint);
@@ -921,7 +917,7 @@ class Endpoints {
 		var code = req.params.code || req.body.code;
 		var service = req.params.service;
 
-		this.validate_username(username, code).then((permit) => {
+		this.validate_username(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((client) => {
 			return WSAA.generateToken(code, client.type, service, true);
@@ -954,7 +950,7 @@ class Endpoints {
 		}
 
 		return new Promise((resolve, reject) => {
-			this.validate_username(username, code).then((permit) => {
+			this.validate_username(username, code).then(() => {
 				return this.validate_client(code);
 			}).then((validatedClient) => {
 				client = validatedClient;
@@ -966,10 +962,10 @@ class Endpoints {
 
 				return this.createClientForService(type, version, service, endpoint);
 			}).then((soapClient) => {
-				var afipRequest = {}
+				var afipRequest = {};
 
 				// Parsear versión de WSFE
-				if (version == 'v1') {
+				if (version === 'v1') {
 					afipRequest.Auth = {
 						Token: tokens.token,
 						Sign: tokens.sign,
@@ -977,7 +973,7 @@ class Endpoints {
 					};
 				}
 
-				if (version == 'v2') {
+				if (version === 'v2') {
 					afipRequest.token = tokens.token;
 					afipRequest.sign = tokens.sign;
 					afipRequest.cuitRepresentada = client.cuit;
@@ -1003,11 +999,11 @@ class Endpoints {
 					}
 
 					try {
-						if (version == 'v1') {
+						if (version === 'v1') {
 							resolve(result[`${endpoint}Result`]);
 						}
 
-						if (version == 'v2') {
+						if (version === 'v2') {
 							resolve(result.toJSON());
 						}
 					} catch (err) {
@@ -1035,7 +1031,7 @@ class Endpoints {
 		var params = req.body; //req.body.params;
 		var client, type, tokens;
 
-		this.validate_username(username, code).then((permit) => {
+		this.validate_username(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
@@ -1060,7 +1056,7 @@ class Endpoints {
 			if (typeof (soapClient[endpoint]) !== 'function') {
 				return res.status(400).json({
 					result: false,
-					err: "El endpoint solicitado no existe para el servicio: " + endpoint
+					err: `El endpoint solicitado no existe para el servicio: ${endpoint}`
 				});
 			}
 
@@ -1100,19 +1096,16 @@ class Endpoints {
 		var version = req.body.version || "v1";
 		var service = req.params.service;
 		var endpoint = req.params.endpoint || "";
-		var params = req.body.params || {};
-		var type, client, tokens;
+		var type, client;
 
-		this.validate_username(username, code).then((permit) => {
+		this.validate_username(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
 			type = client.type;
 
 			return WSAA.generateToken(code, type, service);
-		}).then((newTokens) => {
-			tokens = newTokens.credentials;
-
+		}).then(() => {
 			return this.createClientForService(type, version, service, endpoint);
 		}).then((soapClient) => {
 			var serviceDescription = JSON.stringify(soapClient.describe());
@@ -1127,7 +1120,7 @@ class Endpoints {
 				result: false,
 				err: err.message
 			});
-		});;
+		});
 	}
 
 	/*
@@ -1145,11 +1138,11 @@ class Endpoints {
 
 		Users.findOne({
 			username: req.body.username
-		}).then(function (user) {
+		}).then((user) => {
 			if (!user)
 				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
-			if (user.password != md5(req.body.password))
+			if (user.password !== md5(req.body.password))
 				return res.status(401).json({ result: false, err: "Combinación de usuario y contraseña incorrecta." });
 
 			var token = jwt.sign(user, global.tokenSecret, {
@@ -1158,7 +1151,7 @@ class Endpoints {
 
 			// Si no proporciona un reCAPTCHA, se lo identifica como usuario externo y se lo autentica
 			if (!req.body.rcResponse) {
-				refreshToken = randtoken.uid(256);
+				const refreshToken = randtoken.uid(256);
 
 				user.refreshToken = refreshToken;
 				user.save();
@@ -1177,10 +1170,10 @@ class Endpoints {
 			// 	});
 			// }
 
-			var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + config.rcSecret + "&response=" + req.body.rcResponse + "&remoteip=";
+			var verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${config.rcSecret}&response=${req.body.rcResponse}&remoteip=`;
 
-			request(verificationUrl, (error, response, body) => {
-				if (error) {
+			request(verificationUrl, (err, response, body) => {
+				if (err) {
 					logger.error(err);
 					return res.status(401).json({
 						result: false,
@@ -1191,7 +1184,7 @@ class Endpoints {
 				body = JSON.parse(body);
 
 				if (body.success === true) {
-					refreshToken = randtoken.uid(256);
+					const refreshToken = randtoken.uid(256);
 
 					user.refreshToken = refreshToken;
 					user.save();
@@ -1208,7 +1201,7 @@ class Endpoints {
 					});
 				}
 			});
-		}, function (err) {
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
@@ -1315,7 +1308,7 @@ class Endpoints {
 
 		Users.findOne({
 			username: req.body.username
-		}).then(function (user) {
+		}).then((user) => {
 			if (user) {
 				return res.status(400).json({ result: false, err: "El usuario ya existe" });
 			}
@@ -1323,14 +1316,14 @@ class Endpoints {
 			var newUser = req.body;
 			newUser.password = md5(req.body.password);
 
-			var user = new Users(newUser);
+			user = new Users(newUser);
 
-			user.save().then(function (user) {
+			user.save().then((user) => {
 				res.json({ result: true, data: user });
-			}, function (err) {
+			}, (err) => {
 				return res.status(500).json({ result: false, err: err.message });
 			});
-		}, function (err) {
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
@@ -1341,19 +1334,19 @@ class Endpoints {
 		UserPermissions.findOne({
 			username: req.body.username,
 			code: req.body.code
-		}).then(function (permit) {
+		}).then((permit) => {
 			if (permit) {
 				return res.status(400).json({ result: false, err: "El permiso ya existe" });
 			}
 
-			var permit = new UserPermissions(req.body);
+			permit = new UserPermissions(req.body);
 
-			permit.save().then(function (permit) {
+			permit.save().then((permit) => {
 				res.json({ result: true, data: permit });
-			}, function (err) {
+			}, (err) => {
 				return res.status(500).json({ result: false, err: err.message });
 			});
-		}, function (err) {
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
 	}
@@ -1363,21 +1356,21 @@ class Endpoints {
 
 		Clients.findOne({
 			code: req.body.code
-		}).then(function (client) {
+		}).then((client) => {
 			if (client) {
 				return res.status(400).json({ result: false, err: "El cliente ya existe" });
 			}
 
 			var newClient = req.body;
 
-			var client = new Clients(newClient);
+			client = new Clients(newClient);
 
-			client.save().then(function (client) {
+			client.save().then((client) => {
 				res.json({ result: true, data: client });
-			}, function (err) {
+			}, (err) => {
 				return res.status(500).json({ result: false, err: err.message });
 			});
-		}, function (err) {
+		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
 		});
 	}

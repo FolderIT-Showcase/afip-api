@@ -1,8 +1,8 @@
 var fs = require('fs');
 
-fs.readdirSync(__dirname).forEach(function (file) {
+fs.readdirSync(__dirname).forEach((file) => {
   if (file !== 'index.js') {
     var moduleName = file.split('.')[0];
-    exports[moduleName] = require('./' + moduleName);
+    exports[moduleName] = require(`./${moduleName}`);
   }
 });

@@ -62,7 +62,7 @@ paths:
       summary: Refresh de token de autenticación
       description: >-
         Se debe enviar un usuario y refresh token válidos.
-      operationId: login
+      operationId: token
       produces:
         - application/json
       parameters:

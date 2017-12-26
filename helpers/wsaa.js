@@ -15,7 +15,7 @@ var fs = require('fs'),
 	logger = require('tracer').colorConsole(global.loggerFormat);
 
 class Tokens {
-	constructor(code) {
+	constructor() {
 		this.client = {
 			"PROD": false,
 			"HOMO": false
@@ -56,12 +56,12 @@ class Tokens {
 				until: { $gte: moment().format() }
 			}).sort({
 				since: -1
-			}).then(function (token) {
+			}).then((token) => {
 				if (!token)
-					resolve(undefined)
+					resolve(undefined);
 
 				resolve(token);
-			}, function (err) {
+			}, (err) => {
 				reject(err);
 			});
 		});
@@ -69,7 +69,7 @@ class Tokens {
 
 	getCurrentTime() {
 		return new Promise((resolve, reject) => {
-			ntpClient.getNetworkTime("time.afip.gov.ar", 123, function (err, date) {
+			ntpClient.getNetworkTime("time.afip.gov.ar", 123, (err, date) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -84,14 +84,14 @@ class Tokens {
 
 		Clients.findOne({
 			code: code
-		}).then(function (client) {
+		}).then((client) => {
 			if (!client) {
-				callback({ message: "Client not found: " + code });
+				callback({ message: `Client not found: ${code}` });
 				return false;
 			}
 
-			var cert = path.join(global.appRoot, 'keys', client.code + '.pem');
-			var key = path.join(global.appRoot, 'keys', client.code + '.key');
+			var cert = path.join(global.appRoot, 'keys', `${client.code}.pem`);
+			var key = path.join(global.appRoot, 'keys', `${client.code}.key`);
 
 			fs.writeFile(cert, client.signer, 'utf8', (err) => {
 				if (err)
@@ -105,9 +105,9 @@ class Tokens {
 						content: data,
 						cert: cert,
 						key: key
-					}).catch(function (err) {
+					}).catch((err) => {
 						callback(err);
-					}).then(function (result) {
+					}).then((result) => {
 						callback(null, result);
 					});
 				});
@@ -192,11 +192,11 @@ class Tokens {
 
 	generateToken(code, type, service, refresh = false) {
 		// Parsear servicios con códigos específicos
-		if (service == 'wsfev1') {
+		if (service === 'wsfev1') {
 			service = 'wsfe';
 		}
 
-		if (service == 'wsfexv1') {
+		if (service === 'wsfexv1') {
 			service = 'wsfex';
 		}
 
@@ -215,7 +215,7 @@ class Tokens {
 					}).then((cms) => {
 						client.loginCms({
 							in0: cms.in0
-						}, (err, result, raw, soapHeader) => {
+						}, (err, result, raw) => {
 							this.parseXML(raw).then((res) => {
 								var body = res.envelope.body;
 
@@ -238,7 +238,7 @@ class Tokens {
 
 										return newToken.save();
 									}).then((newToken) => {
-										resolve(newToken)
+										resolve(newToken);
 									}).catch(reject);
 								} else {
 									reject({
