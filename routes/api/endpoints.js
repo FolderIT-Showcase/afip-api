@@ -713,8 +713,6 @@ class Endpoints {
 			}
 		};
 
-		logger.debug(params);
-
 		this.afip({
 			username: username,
 			code: code,

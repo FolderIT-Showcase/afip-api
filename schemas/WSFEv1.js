@@ -105,5 +105,23 @@ module.exports = {
             type: "number",
             required: true
         }
+    },
+    FECompConsultar: {
+        PtoVta: {
+            type: "number",
+            required: true,
+            minimum: 1,
+            maximum: 9998
+        },
+        CbteTipo: {
+            type: "number",
+            required: true
+        },
+        CbteNro: {
+            type: "number",
+            required: true,
+            minimum: 1,
+            maximum: 99999999
+        },
     }
 };
