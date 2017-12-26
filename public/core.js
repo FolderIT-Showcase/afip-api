@@ -125,7 +125,7 @@ app.controller('NavbarController', ['$scope', '$rootScope', '$localStorage', '$l
     };
 }]);
 
-app.controller('ReportingController', ['', function () {
+app.controller('ReportingController', [function () {
 
 }]);
 
