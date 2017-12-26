@@ -24,11 +24,11 @@ var db = mongoose.connection;
 db.on('error', (err) => {
 	logger.warn(err);
 });
-db.once('open', function () {
+db.once('open', () => {
 	logger.info("Connection to DB established");
 
 	// Control de sobrecarga
-	app.use(function (req, res, next) {
+	app.use((req, res, next) => {
 		if (toobusy()) res.status(503).json({
 			result: false,
 			err: "El servicio se encuentra sobrecargado. Por favor, intente nuevamente."
@@ -43,9 +43,9 @@ db.once('open', function () {
 	app.use('/api', express.static(path.join(__dirname, 'public/api')));
 
 	// Permitir certificados de cualquier CA
-	process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+	process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
-	app.listen(process.env.PORT || 3000, function () {
+	app.listen(process.env.PORT || 3000, () => {
 		logger.info('AFIP API listening on port', (process.env.PORT || 3000));
 
 		// Inicializacion de modelos de la base de datos
@@ -62,10 +62,14 @@ db.once('open', function () {
 			});
 		});
 
+		app.use((req, res) => {
+			res.sendFile(`${__dirname}/public/index.html`);
+		});
+
 		logger.info("All systems GO!");
 	});
 });
-db.on('disconnected', function () {
+db.on('disconnected', () => {
 	logger.error('MongoDB disconnected!');
 	mongoose.connect(config.databases[global.environment], { server: { auto_reconnect: true } });
 });

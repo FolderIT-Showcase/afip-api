@@ -39,12 +39,7 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
 
     return {
         request: function (config) {
-            var toastr = $injector.get('toastr');
-
-            if (config.url.match('api/') && !config.url.match('api/login') && (!$localStorage.jwt || jwtHelper.isTokenExpired($localStorage.jwt))) {
-                $localStorage.jwt = undefined;
-                $rootScope.loggedIn = false;
-
+            if (config.url.match('api/') && !config.url.match('api/login') && !config.url.match('api/token') && (!$localStorage.jwt || jwtHelper.isTokenExpired($localStorage.jwt))) {
                 config.timeout = 0;
                 config.aborted = true;
             }
@@ -58,10 +53,38 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
                 toastr.warning("Su sesión ha expirado. Por favor, reingrese al sistema.");
                 canceller.resolve('Session Expired');
                 $location.path('/');
+                $localStorage.jwt = undefined;
+                $rootScope.loggedIn = false;
             } else if (rejection.status === 401) {
-                toastr.warning("Su sesión es inválida o ha expirado. Por favor, reingrese al sistema.");
-                canceller.resolve('Unauthorized');
-                $location.path('/');
+                toastr.warning("Su sesión es inválida o ha expirado.");
+                if ($localStorage.jwt && $localStorage.username && $localStorage.jwtRefresh && jwtHelper.isTokenExpired($localStorage.jwt) === true) {
+                    var $http = $injector.get('$http');
+                    $http.post('/api/token', { username: $localStorage.username, refreshToken: $localStorage.jwtRefresh })
+                        .then((res) => {
+                            if (res.data.result === true) {
+                                toastr.info("Sesión renovada. Por favor, reintente la operación.");
+                                $localStorage.jwt = res.data.token;
+
+                                $rootScope.loggedIn = true;
+
+                                $http.defaults.headers.common.Authorization = res.data.token;
+                                canceller.resolve('Unauthorized');
+                            } else {
+                                $localStorage.jwt = undefined;
+                                $rootScope.loggedIn = false;
+                                canceller.resolve('Unauthorized');
+                            }
+                        }, () => {
+                            $localStorage.jwt = undefined;
+                            $rootScope.loggedIn = false;
+                            canceller.resolve('Unauthorized');
+                        });
+                } else {
+                    $localStorage.jwt = undefined;
+                    $rootScope.loggedIn = false;
+                    $location.path('/');
+                    canceller.resolve('Unauthorized');
+                }
             } else if (rejection.status === 403) {
                 toastr.warning("Su usuario no tiene permisos para realizar la operación.");
                 canceller.resolve('Forbidden');
@@ -87,7 +110,7 @@ app.config(($provide, $httpProvider) => {
     $httpProvider.interceptors.push('httpAbortInterceptor');
 });
 
-app.controller('MainController', ['', function () {
+app.controller('MainController', [function () {
 
 }]);
 
