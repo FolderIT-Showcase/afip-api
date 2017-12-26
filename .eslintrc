@@ -21,6 +21,7 @@
         "no-debugger": 1
     },
     "globals": {
-        "$": true
+        "$": true,
+        "angular": true
     }
 }
