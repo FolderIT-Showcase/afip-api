@@ -74,7 +74,7 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
                 $rootScope.loggedIn = false;
                 canceller.resolve('Unauthorized');
               }
-            }, () => {
+            }).catch(() => {
               $localStorage.jwt = undefined;
               $rootScope.loggedIn = false;
               canceller.resolve('Unauthorized');
@@ -282,7 +282,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           $scope.clients = [];
           toastr.error(res.data.err);
         }
-      }, () => {
+      }).catch(() => {
         $scope.clients = [];
         $loading.finish('clients');
       });
@@ -302,7 +302,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           $scope.users = [];
           toastr.error(res.data.err);
         }
-      }, () => {
+      }).catch(() => {
         $scope.users = [];
         $loading.finish('users');
       });
@@ -417,7 +417,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
 
     modalInstance.rendered.then(() => {
@@ -443,7 +443,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
   };
 
@@ -472,10 +472,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('users');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Ingreso de usuario cancelado");
     });
   };
@@ -507,10 +507,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('clients');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Ingreso de cliente cancelado");
     });
   };
@@ -532,7 +532,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         } else {
           toastr.error(res.data.err);
         }
-      }, () => {
+      }).catch(() => {
         $loading.finish('clients');
       });
   };
@@ -563,10 +563,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('users');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Edición de usuario cancelada");
     });
   };
@@ -598,10 +598,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('clients');
         });
-    }, () => {
+    }).catch(() => {
       //
     });
   };
@@ -634,10 +634,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('clients');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Edición de cliente cancelada");
     });
   };
@@ -677,10 +677,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('users');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Restablecimiento de contraseña cancelado");
     });
   };
@@ -698,7 +698,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
   };
 
@@ -727,10 +727,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('clients');
         });
-    }, () => {
+    }).catch(() => {
       //
     });
   };
@@ -760,10 +760,10 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('users');
         });
-    }, () => {
+    }).catch(() => {
       //
     });
   };
@@ -784,7 +784,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
 
     modalInstance.rendered.then(() => {
@@ -835,7 +835,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
 
     modalInstance.rendered.then(() => {
@@ -847,6 +847,8 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         } else {
           toastr.error(res.data.err);
         }
+      }).catch(() => {
+        $loading.finish('lastCbte');
       });
     });
   };
@@ -900,7 +902,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     });
 
     modalInstance.result.then(() => {
-    }, () => {
+    }).catch(() => {
     });
 
     modalInstance.rendered.then(() => {
@@ -912,6 +914,8 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         } else {
           toastr.error(res.data.err);
         }
+      }).catch(() => {
+        $loading.finish('compConsultar');
       });
     });
   };
@@ -1017,10 +1021,10 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('permissions');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Ingreso de permiso cancelado");
     });
   };
@@ -1051,10 +1055,10 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('permissions');
         });
-    }, () => {
+    }).catch(() => {
       toastr.info("Edición de permiso cancelada");
     });
   };
@@ -1085,10 +1089,10 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
           } else {
             toastr.error(res.data.err);
           }
-        }, () => {
+        }).catch(() => {
           $loading.finish('permissions');
         });
-    }, () => {
+    }).catch(() => {
       //
     });
   };
@@ -1105,7 +1109,7 @@ app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOp
         } else {
           toastr.error(res.data.err);
         }
-      }, () => {
+      }).catch(() => {
         $loading.finish('permissions');
       });
   };
@@ -1163,7 +1167,7 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
           toastr.error(res.data.err);
           //vcRecaptchaService.reload($scope.widgetId);
         }
-      }, () => {
+      }).catch(() => {
         $loading.finish('login');
         vcRecaptchaService.reload($scope.widgetId);
       });
