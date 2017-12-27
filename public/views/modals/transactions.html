@@ -19,6 +19,7 @@
                         <th class="fit">Fca. Cbte.</th>
                         <th class="fit">Rto.</th>
                         <th class="fit">CAE</th>
+                        <th class="fit">CAE Vto.</th>
                         <th class="not-sortable" style="width:55px;"></th>
                     </tr>
                 </thead>
@@ -29,14 +30,19 @@
                         <td>{{transaction.endpoint}}</td>
                         <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
                         <td>{{transaction.ptoVta}}</td>
-                        <td><div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div></td>
+                        <td>
+                            <div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div>
+                        </td>
                         <td>{{transaction.cbteNro}}</td>
                         <td>{{transaction.importe | currency}}</td>
                         <td>{{transaction.cbteFca | date:"dd/MM/yyyy"}}</td>
                         <td>{{transaction.resultado}}</td>
                         <td>{{transaction.cae}}</td>
+                        <td>{{transaction.caeVto | date:"dd/MM/yyyy"}}</td>
                         <td>
-                            <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)"><i class="glyphicon glyphicon-eye-open"></i></button>
+                            <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)">
+                                <i class="glyphicon glyphicon-eye-open"></i>
+                            </button>
                         </td>
                     </tr>
                 </tbody>

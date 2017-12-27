@@ -358,14 +358,17 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
             det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
             var detReq = request.FeCAEReq.FeDetReq.FECAEDetRequest[0];
+
             e.resultado = det.Resultado;
             e.cae = det.CAE;
             e.cbteNro = det.CbteDesde;
             e.importe = detReq.ImpTotal * detReq.MonCotiz;
             e.cbteFca = moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY");
+            e.caeVto = (det.CAEFchVto) ? moment(det.CAEFchVto, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
           }
           if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeCabResp) {
             cab = response.FECAESolicitarResult.FeCabResp;
+
             e.ptoVta = cab.PtoVta;
             e.cbteTipo = cab.CbteTipo;
           }
@@ -374,10 +377,13 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             det = response.FECompConsultarResult.ResultGet;
 
             e.resultado = det.Resultado;
+            e.ptoVta = det.PtoVta;
+            e.cbteTipo = det.CbteTipo;
             e.cae = det.CodAutorizacion;
             e.cbteNro = det.CbteDesde;
             e.importe = det.ImpTotal;
             e.cbteFca = moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY");
+            e.caeVto = (det.FchVto) ? moment(det.FchVto, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
           }
 
           //WSFEX
@@ -389,8 +395,9 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             e.resultado = cab.Resultado;
             e.cae = cab.Cae;
             e.cbteNro = cab.Cbte_nro;
-            e.importe = cmp.Imp_total * cmp.Moneda_Ctz;
+            e.importe = cmp.Imp_total * cmp.Moneda_ctz;
             e.cbteFca = moment(cab.Fch_cbte, "YYYYMMDD").format("DD/MM/YYYY");
+            e.caeVto = (cab.Fch_venc_Cae) ? moment(cab.Fch_venc_Cae, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
           }
 
           //Descripción del tipo de comprobante
