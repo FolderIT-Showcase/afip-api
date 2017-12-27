@@ -351,53 +351,83 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
         _.forEach($scope.transactions, (e) => {
           var response = JSON.parse(e.response || "{}");
           var request = JSON.parse(e.request || "{}");
-          var cab;
-          var det;
+          var cmp = {}, cab = {}, det = {}, detReq = {};
 
-          //WSFE
-          if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
-            det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
-            var detReq = request.FeCAEReq.FeDetReq.FECAEDetRequest[0];
+          //WSFE FECAESolicitar
+          if (response.FECAESolicitarResult) {
+            if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
+              det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
+            }
+            if (response.FECAESolicitarResult.FeCabResp) {
+              cab = response.FECAESolicitarResult.FeCabResp;
+            }
+            if (request.FeCAEReq && request.FeCAEReq.FeDetReq && request.FeCAEReq.FeDetReq.FECAEDetRequest[0]) {
+              detReq = request.FeCAEReq.FeDetReq.FECAEDetRequest[0];
+            }
 
             e.resultado = det.Resultado;
             e.cae = det.CAE;
             e.cbteNro = det.CbteDesde;
             e.importe = detReq.ImpTotal * detReq.MonCotiz;
-            e.cbteFca = moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY");
+            e.cbteFca = (det.CbteFch) ? moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY") : (detReq.CbteFch) ? moment(detReq.CbteFch, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
             e.caeVto = (det.CAEFchVto) ? moment(det.CAEFchVto, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
-          }
-          if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeCabResp) {
-            cab = response.FECAESolicitarResult.FeCabResp;
-
             e.ptoVta = cab.PtoVta;
             e.cbteTipo = cab.CbteTipo;
+
+            if (e.resultado !== 'A') {
+              e.resultado = 'R';
+            }
           }
 
-          if (response.FECompConsultarResult && response.FECompConsultarResult.ResultGet) {
-            det = response.FECompConsultarResult.ResultGet;
+          //WSFE FECompUltimoAutorizado
+          if (response.FECompUltimoAutorizadoResult) {
+            det = response.FECompUltimoAutorizadoResult;
+
+            e.ptoVta = det.PtoVta || request.PtoVta;
+            e.cbteTipo = det.CbteTipo || request.CbteTipo;
+            e.cbteNro = det.CbteNro;
+          }
+
+          //WSFE FECompConsultar
+          if (response.FECompConsultarResult) {
+            if (response.FECompConsultarResult.ResultGet) {
+              det = response.FECompConsultarResult.ResultGet;
+            }
+            if (request.FeCompConsReq) {
+              detReq = request.FeCompConsReq;
+            }
 
             e.resultado = det.Resultado;
-            e.ptoVta = det.PtoVta;
-            e.cbteTipo = det.CbteTipo;
+            e.ptoVta = det.PtoVta || detReq.PtoVta;
+            e.cbteTipo = det.CbteTipo || detReq.CbteTipo;
             e.cae = det.CodAutorizacion;
-            e.cbteNro = det.CbteDesde;
+            e.cbteNro = det.CbteDesde || detReq.CbteNro;
             e.importe = det.ImpTotal;
-            e.cbteFca = moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY");
+            e.cbteFca = (det.CbteFch) ? moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
             e.caeVto = (det.FchVto) ? moment(det.FchVto, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
           }
 
-          //WSFEX
-          if (response.FEXAuthorizeResult && response.FEXAuthorizeResult.FEXResultAuth) {
-            cab = response.FEXAuthorizeResult.FEXResultAuth;
-            var cmp = request.Cmp;
-            e.ptoVta = cab.Punto_vta;
-            e.cbteTipo = cab.Cbte_tipo;
+          //WSFEX FEXAuthorize
+          if (response.FEXAuthorizeResult) {
+            if (response.FEXAuthorizeResult && response.FEXAuthorizeResult.FEXResultAuth) {
+              cab = response.FEXAuthorizeResult.FEXResultAuth;
+            }
+            if (request.Cmp) {
+              cmp = request.Cmp;
+            }
+
+            e.ptoVta = cab.Punto_vta || cmp.Punto_vta;
+            e.cbteTipo = cab.Cbte_tipo || cmp.Cbte_Tipo;
             e.resultado = cab.Resultado;
             e.cae = cab.Cae;
-            e.cbteNro = cab.Cbte_nro;
+            e.cbteNro = cab.Cbte_nro || cmp.Cbte_nro;
             e.importe = cmp.Imp_total * cmp.Moneda_ctz;
-            e.cbteFca = moment(cab.Fch_cbte, "YYYYMMDD").format("DD/MM/YYYY");
+            e.cbteFca = (cab.Fch_cbte) ? moment(cab.Fch_cbte, "YYYYMMDD").format("DD/MM/YYYY") : (cmp.Fecha_cbte) ? moment(cmp.Fecha_cbte, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
             e.caeVto = (cab.Fch_venc_Cae) ? moment(cab.Fch_venc_Cae, "YYYYMMDD").format("DD/MM/YYYY") : undefined;
+
+            if (e.resultado !== 'A') {
+              e.resultado = 'R';
+            }
           }
 
           //Descripción del tipo de comprobante

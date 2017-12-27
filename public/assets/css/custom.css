@@ -99,3 +99,11 @@ div.dataTables_info {
     border: 4px dashed #5f8ab9;
     color: #5f8ab9;
 }
+
+.transaction-danger {
+    background-color: #f2dede !important;
+}
+
+.transaction-success {
+    background-color: #dff0d8 !important;
+}

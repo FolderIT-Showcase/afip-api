@@ -24,7 +24,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="transaction in transactions">
+                    <tr ng-repeat="transaction in transactions" ng-class="{'transaction-danger': transaction.resultado === 'R', 'transaction-success': transaction.resultado === 'A'}">
                         <td>{{transaction.service}}</td>
                         <td>{{transaction.username}}</td>
                         <td>{{transaction.endpoint}}</td>
