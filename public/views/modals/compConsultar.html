@@ -1,0 +1,45 @@
+<div class="modal-header">
+  <h3 class="modal-title" id="modal-title">{{modalTitle}}</h3>
+</div>
+<div class="modal-body" id="modal-body" dw-loading="compConsultar">
+  <form name="compConsultarForm">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label for="ptovta">Punto de Venta</label>
+          <input type="number" id="ptovta" min="1" max="9999" class="form-control" placeholder="Punto de Venta" required="" autofocus="" ng-model="formData.PtoVta">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label for="ptovta">Nº de Comprobante</label>
+          <input type="number" id="cbtenro" min="1" max="99999999" class="form-control" placeholder="Nº de Comprobante" required="" autofocus="" ng-model="formData.CbteNro">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label for="cbtetipo">Tipo de Comprobante</label>
+          <input type="text" class="form-control" ng-model="formData.CbteTipo" uib-typeahead="type.Id as type.Desc for type in CbteTipo | filter:$viewValue | limitTo:8"
+                 typeahead-show-hint="true"
+                 typeahead-min-length="0"
+                 typeahead-editable="false"
+                 typeahead-input-formatter="formatCbteTipo($model)">
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <button type="submit" class="btn btn-primary" ng-disabled="compConsultarForm.$invalid" ng-click="compConsultarGet(formData)">Consultar</button>
+      </div>
+    </div>
+  </form>
+  <div class="row">
+    <hr ng-show="!responseCollapsed">
+  </div>
+  <div uib-collapse="responseCollapsed">
+      <textarea id="response" class="form-control vresize monospace" rows="20" readonly>{{ response | json }}</textarea>
+  </div>  
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" type="button" ng-click="$dismiss()">Cerrar</button>
+</div>

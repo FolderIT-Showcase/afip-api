@@ -883,6 +883,69 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
       $loading.finish('lastCbte');
     });
   };
+
+  $scope.compConsultar = function (client) {
+    $scope.formData = {
+      code: client.code,
+      type: client.type
+    };
+    $scope.modalTitle = `Consultar Comprobante: ${client.code}`;
+    $scope.responseCollapsed = true;
+    $scope.response = undefined;
+
+    var modalInstance = $uibModal.open({
+      backdrop: 'static',
+      scope: $scope,
+      templateUrl: 'views/modals/compConsultar.html'
+    });
+
+    modalInstance.result.then(() => {
+    }, () => {
+    });
+
+    modalInstance.rendered.then(() => {
+      $loading.start('compConsultar');
+      $http.get(`/api/cbteTipo/${client.code}`).then((res) => {
+        $loading.finish('compConsultar');
+        if (res.data.result) {
+          $scope.CbteTipo = res.data.data;
+        } else {
+          toastr.error(res.data.err);
+        }
+      });
+    });
+  };
+
+  $scope.compConsultarGet = function (formData) {
+    $loading.start('compConsultar');
+
+    $http.post('/api/compConsultar', formData).then((res) => {
+      $loading.finish('compConsultar');
+
+      if (res.data.result) {
+        $scope.response = res.data.data;
+        $scope.responseCollapsed = false;
+      } else {
+        $scope.responseCollapsed = true;
+        $scope.response = undefined;
+        var errs = "";
+
+        if (angular.isArray(res.data.err)) {
+          _.forEach(res.data.err, (e) => {
+            errs += `<p><strong>Error ${e.Code}</strong><br/>${e.Msg}</p>`;
+          });
+        } else {
+          errs = res.data.err;
+        }
+
+        toastr.error(errs);
+      }
+    }).catch(() => {
+      $scope.responseCollapsed = true;
+      $scope.response = undefined;
+      $loading.finish('compConsultar');
+    });
+  };
 }]);
 
 app.controller('UserPermissionsController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', function ($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading) {
