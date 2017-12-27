@@ -352,10 +352,11 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           var response = JSON.parse(e.response || "{}");
           var request = JSON.parse(e.request || "{}");
           var cab;
+          var det;
 
           //WSFE
           if (response.FECAESolicitarResult && response.FECAESolicitarResult.FeDetResp && response.FECAESolicitarResult.FeDetResp.FECAEDetResponse) {
-            var det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
+            det = response.FECAESolicitarResult.FeDetResp.FECAEDetResponse;
             var detReq = request.FeCAEReq.FeDetReq.FECAEDetRequest[0];
             e.resultado = det.Resultado;
             e.cae = det.CAE;
@@ -367,6 +368,16 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
             cab = response.FECAESolicitarResult.FeCabResp;
             e.ptoVta = cab.PtoVta;
             e.cbteTipo = cab.CbteTipo;
+          }
+
+          if (response.FECompConsultarResult && response.FECompConsultarResult.ResultGet) {
+            det = response.FECompConsultarResult.ResultGet;
+
+            e.resultado = det.Resultado;
+            e.cae = det.CodAutorizacion;
+            e.cbteNro = det.CbteDesde;
+            e.importe = det.ImpTotal;
+            e.cbteFca = moment(det.CbteFch, "YYYYMMDD").format("DD/MM/YYYY");
           }
 
           //WSFEX
@@ -848,6 +859,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           toastr.error(res.data.err);
         }
       }).catch(() => {
+        modalInstance.dismiss();
         $loading.finish('lastCbte');
       });
     });
@@ -915,6 +927,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           toastr.error(res.data.err);
         }
       }).catch(() => {
+        modalInstance.dismiss();
         $loading.finish('compConsultar');
       });
     });
