@@ -39,7 +39,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="code">Código</label>
-                    <input type="text" id="code" class="form-control" placeholder="Código" required="" autofocus="" ng-model="client.code">
+                    <input type="text" id="code" class="form-control" placeholder="Código" required="" autofocus="" ng-model="client.code" ng-disabled="!isAdmin && client.code">
                 </div>
             </div>
             <div class="col-md-12">

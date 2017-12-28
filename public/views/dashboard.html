@@ -20,19 +20,39 @@
                             <td>{{client.cuit}}</td>
                             <td>{{client.type}}</td>
                             <td>
-                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editClient(client)"><i class="glyphicon glyphicon-edit"></i></button>
-                                <button class="btn btn-default" uib-tooltip="Clonar" ng-click="cloneClient(client)"><i class="glyphicon glyphicon-duplicate"></i></button>
-                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeClient(client)"><i class="glyphicon glyphicon-remove"></i></button>
+                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editClient(client)">
+                                    <i class="glyphicon glyphicon-edit"></i>
+                                </button>
+                                <button class="btn btn-default" uib-tooltip="Clonar" ng-click="cloneClient(client)" ng-if="isAdmin">
+                                    <i class="glyphicon glyphicon-duplicate"></i>
+                                </button>
+                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeClient(client)" ng-if="isAdmin">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </button>
                                 <div class="btn-group pull-right" uib-dropdown>
-                                    <button class="btn btn-primary" uib-tooltip="Más acciones..." uib-dropdown-toggle><span class="glyphicon glyphicon-menu-hamburger"></span></button>
+                                    <button class="btn btn-primary" uib-tooltip="Más acciones..." uib-dropdown-toggle>
+                                        <span class="glyphicon glyphicon-menu-hamburger"></span>
+                                    </button>
                                     <ul class="dropdown-menu" uib-dropdown-menu>
-                                        <li class="disabled"><a href="">Factura Manual</a></li>
-                                        <li><a href="" ng-click="regenTokens(client)">Regenerar Tickets de Acceso</a></li>
-                                        <li><a href="" ng-click="genRSA(client)">Generar Solicitud de Certificado</a></li>
+                                        <li class="disabled">
+                                            <a href="">Factura Manual</a>
+                                        </li>
+                                        <li>
+                                            <a href="" ng-click="regenTokens(client)">Regenerar Tickets de Acceso</a>
+                                        </li>
+                                        <li>
+                                            <a href="" ng-click="genRSA(client)">Generar Solicitud de Certificado</a>
+                                        </li>
                                         <li class="divider"></li>
-                                        <li><a href="" ng-click="viewTransactions(client)">Ver Transacciones</a></li>
-                                        <li><a href="" ng-click="lastCbte(client)">Ver Último Comprobante...</a></li>
-                                        <li><a href="" ng-click="compConsultar(client)">Consultar Comprobante...</a></li>
+                                        <li>
+                                            <a href="" ng-click="viewTransactions(client)">Ver Transacciones</a>
+                                        </li>
+                                        <li>
+                                            <a href="" ng-click="lastCbte(client)">Ver Último Comprobante...</a>
+                                        </li>
+                                        <li>
+                                            <a href="" ng-click="compConsultar(client)">Consultar Comprobante...</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </td>
@@ -46,7 +66,7 @@
         <div class="row">
             <div class="col-md-12" dw-loading="users">
                 <h2>Usuarios</h2>
-                <table datatable="ng" dt-options="vmU.dtOptions" dt-column-defs="vmU.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">           
+                <table datatable="ng" dt-options="vmU.dtOptions" dt-column-defs="vmU.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -59,12 +79,25 @@
                         <tr ng-repeat="user in users">
                             <td>{{user.name}}</td>
                             <td>{{user.username}}</td>
-                            <td><div class="checkbox checkbox-primary"><input disabled type="checkbox" ng-model="user.admin"><label></label></div></td>
                             <td>
-                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editUser(user)"><i class="glyphicon glyphicon-edit"></i></button>
-                                <button class="btn btn-default" uib-tooltip="Permisos de Clientes" ng-click="userPermissions(user)"><i class="glyphicon glyphicon-wrench"></i></button>
-                                <button class="btn btn-default" uib-tooltip="Restablecer Contraseña" ng-click="resetPassword(user)"><i class="glyphicon glyphicon-asterisk"></i></button>
-                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeUser(user)"><i class="glyphicon glyphicon-remove"></i></button>
+                                <div class="checkbox checkbox-primary">
+                                    <input disabled type="checkbox" ng-model="user.admin">
+                                    <label></label>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-default" uib-tooltip="Editar" ng-click="editUser(user)">
+                                    <i class="glyphicon glyphicon-edit"></i>
+                                </button>
+                                <button class="btn btn-default" uib-tooltip="Permisos de Clientes" ng-click="userPermissions(user)" ng-if="isAdmin">
+                                    <i class="glyphicon glyphicon-wrench"></i>
+                                </button>
+                                <button class="btn btn-default" uib-tooltip="Restablecer Contraseña" ng-click="resetPassword(user)" ng-if="isAdmin">
+                                    <i class="glyphicon glyphicon-asterisk"></i>
+                                </button>
+                                <button class="btn btn-warning" uib-tooltip="Eliminar" ng-click="removeUser(user)" ng-if="isAdmin">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </button>
                             </td>
                         </tr>
                     </tbody>
