@@ -13,7 +13,8 @@ var app = angular.module('node-fe', [
   'ui.bootstrap',
   'datatables',
   'datatables.bootstrap',
-  'datatables.buttons'
+  'datatables.buttons',
+  'datatables.columnfilter'
 ]);
 
 app.service('TEXT_ERRORS', [function () {
@@ -54,6 +55,7 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
         canceller.resolve('Session Expired');
         $location.path('/');
         $localStorage.jwt = undefined;
+        $localStorage.admin = undefined;
         $rootScope.loggedIn = false;
       } else if (rejection.status === 401) {
         toastr.warning("Su sesión es inválida o ha expirado.");
@@ -64,6 +66,7 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
               if (res.data.result === true) {
                 toastr.info("Sesión renovada. Por favor, reintente la operación.");
                 $localStorage.jwt = res.data.token;
+                $localStorage.admin = res.data.admin;
 
                 $rootScope.loggedIn = true;
 
@@ -71,16 +74,19 @@ app.factory('httpAbortInterceptor', ['$q', '$location', '$localStorage', 'jwtHel
                 canceller.resolve('Unauthorized');
               } else {
                 $localStorage.jwt = undefined;
+                $localStorage.admin = undefined;
                 $rootScope.loggedIn = false;
                 canceller.resolve('Unauthorized');
               }
             }).catch(() => {
               $localStorage.jwt = undefined;
+              $localStorage.admin = undefined;
               $rootScope.loggedIn = false;
               canceller.resolve('Unauthorized');
             });
         } else {
           $localStorage.jwt = undefined;
+          $localStorage.admin = undefined;
           $rootScope.loggedIn = false;
           $location.path('/');
           canceller.resolve('Unauthorized');
@@ -135,6 +141,7 @@ app.controller('NavbarController', ['$scope', '$rootScope', '$localStorage', '$l
 
   $scope.logout = function () {
     $localStorage.jwt = undefined;
+    $localStorage.admin = undefined;
     $location.path('/');
     $rootScope.loggedIn = false;
     toastr.success("Salida del sistema exitosa");
@@ -145,10 +152,11 @@ app.controller('ReportingController', [function () {
 
 }]);
 
-app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'FileUploader', function ($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, FileUploader) {
+app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$uibModal', 'lodash', 'moment', 'toastr', '$loading', 'FileUploader', '$localStorage', function ($scope, $filter, $http, DTOptionsBuilder, DTColumnDefBuilder, $uibModal, _, moment, toastr, $loading, FileUploader, $localStorage) {
   var uploader = $scope.uploader = new FileUploader();
   uploader.url = "/api/upload/signer";
 
+  $scope.isAdmin = $localStorage.admin;
   $scope.clients = [];
   $scope.users = [];
   $scope.client = {};
@@ -168,55 +176,71 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     Desc: "Facturación Electrónica de Exportación (WSFEX)"
   }];
 
+  const vmCButtons = [{
+    text: "Recargar",
+    action: function () {
+      $scope.getClients();
+    }
+  }];
+
+  if ($scope.isAdmin) {
+    vmCButtons.push({
+      text: "Nuevo",
+      action: function () {
+        $scope.newClient();
+      }
+    });
+  }
+
+  vmCButtons.push({
+    extend: 'csvHtml5',
+    exportOptions: {
+      columns: 'thead th:not(.not-sortable)'
+    },
+    title: `clientes_${moment().format("YYYYMMDD_HH-mm-ss")}`
+  });
+
   $scope.vmC = {
     dtOptions: DTOptionsBuilder.newOptions()
       .withPaginationType('full_numbers')
       .withBootstrap()
       .withDOM('lfrBtip')
-      .withButtons([{
-        text: "Recargar",
-        action: function () {
-          $scope.getClients();
-        }
-      }, {
-        text: "Nuevo",
-        action: function () {
-          $scope.newClient();
-        }
-      }, {
-        extend: 'csvHtml5',
-        exportOptions: {
-          columns: 'thead th:not(.not-sortable)'
-        },
-        title: `clientes_${moment().format("YYYYMMDD_HH-mm-ss")}`
-      }]),
+      .withButtons(vmCButtons),
     dtColumnDefs: [
       DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
     ]
   };
+
+  const vmUButtons = [{
+    text: "Recargar",
+    action: function () {
+      $scope.getUsers();
+    }
+  }];
+
+  if ($scope.isAdmin) {
+    vmUButtons.push({
+      text: "Nuevo",
+      action: function () {
+        $scope.newUser();
+      }
+    });
+  }
+
+  vmUButtons.push({
+    extend: 'csvHtml5',
+    exportOptions: {
+      columns: 'thead th:not(.not-sortable)'
+    },
+    title: `usuarios_${moment().format("YYYYMMDD_HH-mm-ss")}`
+  });
 
   $scope.vmU = {
     dtOptions: DTOptionsBuilder.newOptions()
       .withPaginationType('full_numbers')
       .withBootstrap()
       .withDOM('lfrBtip')
-      .withButtons([{
-        text: "Recargar",
-        action: function () {
-          $scope.getUsers();
-        }
-      }, {
-        text: "Nuevo",
-        action: function () {
-          $scope.newUser();
-        }
-      }, {
-        extend: 'csvHtml5',
-        exportOptions: {
-          columns: 'thead th:not(.not-sortable)'
-        },
-        title: `usuarios_${moment().format("YYYYMMDD_HH-mm-ss")}`
-      }]),
+      .withButtons(vmUButtons),
     dtColumnDefs: [
       DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
     ]
@@ -239,7 +263,35 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
           columns: 'thead th:not(.not-sortable)'
         },
         title: `transacciones_${moment().format("YYYYMMDD_HH-mm-ss")}`
-      }]),
+      }])
+      .withColumnFilter({
+        aoColumns: {
+          0: {
+            type: 'text'
+          },
+          1: {
+            type: 'text'
+          },
+          2: {
+            type: 'text'
+          },
+          3: {
+            type: 'text'
+          },
+          4: {
+            type: 'number'
+          },
+          6: {
+            type: 'number'
+          },
+          7: {
+            type: 'number'
+          },
+          8: {
+            type: 'text'
+          }
+        }
+      }),
     dtColumnDefs: [
       DTColumnDefBuilder.newColumnDef('not-sortable').notSortable()
     ]
@@ -460,7 +512,7 @@ app.controller('DashboardController', ['$scope', '$filter', '$http', 'DTOptionsB
     var modalInstance = $uibModal.open({
       backdrop: 'static',
       scope: $scope,
-      size: 'xl',
+      size: 'xxl',
       templateUrl: 'views/modals/transactions.html'
     });
 
@@ -1202,6 +1254,7 @@ app.controller('LoginController', ['$scope', '$rootScope', '$http', '$location',
         if (res.data.result) {
           $localStorage.username = $scope.formData.username;
           $localStorage.jwt = res.data.token;
+          $localStorage.admin = res.data.admin;
 
           if ($scope.formData.rememberMe === true) {
             $localStorage.jwtRefresh = res.data.refreshToken;

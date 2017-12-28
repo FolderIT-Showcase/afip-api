@@ -336,14 +336,21 @@ class Endpoints {
 
 		router.use(jsonSchemaValidation);
 
-		// Endpoints privados con autenticación (administrativos)
-		router.use('/api/admin/*', administrative);
-
+		// Endpoints de consumo en frontend sin requisitos administrativos
 		router.get('/api/admin/getClients', this.getClients.bind(this));
 
 		router.get('/api/admin/getUsers', this.getUsers.bind(this));
 
 		router.get('/api/admin/transactions/:code', this.getTransactions.bind(this));
+
+		router.post('/api/admin/editClient', this.editClient.bind(this));
+
+		router.post('/api/admin/editUser', this.editUser.bind(this));
+
+		router.post('/api/admin/resetPassword', this.resetPassword.bind(this));
+
+		// Endpoints privados con autenticación (administrativos)
+		router.use('/api/admin/*', administrative);
 
 		router.get('/api/admin/permissions/:username', this.getUserPermissions.bind(this));
 
@@ -353,13 +360,7 @@ class Endpoints {
 
 		router.post('/api/admin/newClient', this.newClient.bind(this));
 
-		router.post('/api/admin/editClient', this.editClient.bind(this));
-
-		router.post('/api/admin/editUser', this.editUser.bind(this));
-
 		router.post('/api/admin/editPermit', this.editPermit.bind(this));
-
-		router.post('/api/admin/resetPassword', this.resetPassword.bind(this));
 
 		router.post('/api/admin/removeClient', this.removeClient.bind(this));
 
@@ -764,7 +765,7 @@ class Endpoints {
 		var code = req.params.code || req.body.code;
 		var client;
 
-		this.validate_username(username, code).then(() => {
+		this.validate_username_client(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
@@ -789,7 +790,7 @@ class Endpoints {
 				data: client
 			});
 		}).catch((err) => {
-			res.status(500).json({
+			res.status(err.code || 500).json({
 				result: false,
 				message: err.message
 			});
@@ -877,7 +878,7 @@ class Endpoints {
 		});
 	}
 
-	validate_username(username, code) {
+	validate_username_client(username, code) {
 		return new Promise((resolve, reject) => {
 			var Users = mongoose.model('Users');
 			var UserPermissions = mongoose.model('UserPermissions');
@@ -895,6 +896,7 @@ class Endpoints {
 					}).then((user) => {
 						if (!user) {
 							reject({
+								code: 403,
 								message: "El usuario no tiene permisos para interactuar con el cliente solicitado. Contáctese con el Administrador del servicio de Facturación Electrónica."
 							});
 						} else {
@@ -973,7 +975,7 @@ class Endpoints {
 		var code = req.params.code || req.body.code;
 		var service = req.params.service;
 
-		this.validate_username(username, code).then(() => {
+		this.validate_username_client(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((client) => {
 			return WSAA.generateToken(code, client.type, service, true);
@@ -984,7 +986,7 @@ class Endpoints {
 			});
 		}).catch((err) => {
 			logger.error(err);
-			res.status(500).json({
+			res.status(err.code || 500).json({
 				result: false,
 				err: err.message
 			});
@@ -1006,7 +1008,7 @@ class Endpoints {
 		}
 
 		return new Promise((resolve, reject) => {
-			this.validate_username(username, code).then(() => {
+			this.validate_username_client(username, code).then(() => {
 				return this.validate_client(code);
 			}).then((validatedClient) => {
 				client = validatedClient;
@@ -1072,6 +1074,7 @@ class Endpoints {
 			}).catch((err) => {
 				logger.error(err);
 				reject({
+					code: err.code,
 					message: err.message
 				});
 			});
@@ -1087,7 +1090,7 @@ class Endpoints {
 		var params = req.body; //req.body.params;
 		var client, type, tokens;
 
-		this.validate_username(username, code).then(() => {
+		this.validate_username_client(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
@@ -1139,7 +1142,7 @@ class Endpoints {
 			});
 		}).catch((err) => {
 			logger.error(err);
-			res.status(500).json({
+			res.status(err.code || 500).json({
 				result: false,
 				err: err.message
 			});
@@ -1154,7 +1157,7 @@ class Endpoints {
 		var endpoint = req.params.endpoint || "";
 		var type, client;
 
-		this.validate_username(username, code).then(() => {
+		this.validate_username_client(username, code).then(() => {
 			return this.validate_client(code);
 		}).then((validatedClient) => {
 			client = validatedClient;
@@ -1172,7 +1175,7 @@ class Endpoints {
 			});
 		}).catch((err) => {
 			logger.error(err);
-			res.status(500).json({
+			res.status(err.code || 500).json({
 				result: false,
 				err: err.message
 			});
@@ -1215,7 +1218,8 @@ class Endpoints {
 				return res.json({
 					result: true,
 					token: token,
-					refreshToken: refreshToken
+					refreshToken: refreshToken,
+					admin: user.admin
 				});
 			}
 
@@ -1248,7 +1252,8 @@ class Endpoints {
 					res.json({
 						result: true,
 						token: token,
-						refreshToken: refreshToken
+						refreshToken: refreshToken,
+						admin: user.admin
 					});
 				} else {
 					res.status(401).json({
@@ -1278,7 +1283,8 @@ class Endpoints {
 
 			return res.json({
 				result: true,
-				token: token
+				token: token,
+				admin: user.admin
 			});
 		}, (err) => {
 			return res.status(500).json({ result: false, err: err.message });
@@ -1290,9 +1296,18 @@ class Endpoints {
 	 */
 
 	getClients(req, res) {
-		var Clients = mongoose.model('Clients');
+		const Clients = mongoose.model('Clients');
+		const UserPermissions = mongoose.model('UserPermissions');
+		const user = req.decoded._doc;
 
-		Clients.find({}).then((clients) => {
+		UserPermissions.find({
+			username: user.username
+		}).then((userPermits) => {
+			let permits = _.map(userPermits, (p) => {
+				return p.code;
+			});
+			return Clients.find(user.admin === true ? {} : { code: { $in: permits } });
+		}).then((clients) => {
 			res.json({
 				result: true,
 				data: clients
@@ -1307,8 +1322,10 @@ class Endpoints {
 
 	getUsers(req, res) {
 		var Users = mongoose.model('Users');
+		const user = req.decoded._doc;
 
-		Users.find({}).then((users) => {
+		// Obtener el usuario mismo Ó todos si es administrador
+		Users.find(user.admin !== true ? { username: user.username } : {}).then((users) => {
 			res.json({
 				result: true,
 				data: users
@@ -1432,10 +1449,13 @@ class Endpoints {
 	}
 
 	editClient(req, res) {
-		var Clients = mongoose.model('Clients');
-		var editedClient = req.body;
+		const Clients = mongoose.model('Clients');
+		const editedClient = req.body;
+		const user = req.decoded._doc;
 
-		Clients.findById(editedClient._id).then((client) => {
+		this.validate_username_client(user.username, editedClient.code).then(() => {
+			return Clients.findById(editedClient._id);
+		}).then((client) => {
 			if (!client) {
 				return res.status(400).json({ result: false, err: "El cliente no existe" });
 			}
@@ -1447,17 +1467,29 @@ class Endpoints {
 				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.status(500).json({ result: false, err: err.message });
+			res.status(err.code || 500).json({ result: false, err: err.message });
 		});
 	}
 
 	editUser(req, res) {
 		var Users = mongoose.model('Users');
 		var editedUser = req.body;
+		const thisUser = req.decoded._doc;
 
 		Users.findById(editedUser._id).then((user) => {
 			if (!user) {
 				return res.status(400).json({ result: false, err: "El usuario no existe" });
+			}
+
+			// Deshabilitar edición de toggle de Administrador para usuarios no administradores
+			if (thisUser.admin !== true && editedUser.admin === true) {
+				editedUser.admin = false;
+			}
+
+			if (thisUser.username !== editedUser.username && thisUser.admin !== true) {
+				let err = new Error("Su usuario no tiene permisos para editar el usuario.");
+				err.code = 403;
+				throw err;
 			}
 
 			_.merge(user, editedUser);
@@ -1467,7 +1499,7 @@ class Endpoints {
 				res.status(500).json({ result: false, err: err.message });
 			});
 		}, (err) => {
-			res.status(500).json({ result: false, err: err.message });
+			res.status(err.code || 500).json({ result: false, err: err.message });
 		});
 	}
 
