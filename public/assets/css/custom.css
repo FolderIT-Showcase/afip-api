@@ -42,6 +42,15 @@ body {
     .modal-xl {
         width: 1200px;
     }
+    .modal-xxl {
+        width: 1260px;
+    }
+}
+
+@media (min-width: 1680px) {
+    .modal-xxl {
+        width: 1600px;
+    }
 }
 
 div.dataTables_info {
@@ -106,4 +115,18 @@ div.dataTables_info {
 
 .transaction-success {
     background-color: #dff0d8 !important;
+}
+
+input.number_filter.form-control,
+input.text_filter.form-control {
+    padding: 2px;
+    width: 100%;
+}
+
+input.number_filter.form-control {
+    min-width: 60px;
+}
+
+input.text_filter.form-control {
+    min-width: 100px;
 }

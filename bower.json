@@ -32,9 +32,11 @@
     "angular-sanitize": "^1.6.4",
     "angular-recaptcha": "^4.1.0",
     "angular-jwt": "^0.1.9",
-    "angular-file-upload": "^2.5.0"
+    "angular-file-upload": "^2.5.0",
+    "jquery-datatables-columnfilter": "jquery-datatables-column-filter#*"
   },
   "resolutions": {
-    "angular": "^1.6.4"
+    "angular": "^1.6.4",
+    "datatables": "^1.10.13"
   }
 }

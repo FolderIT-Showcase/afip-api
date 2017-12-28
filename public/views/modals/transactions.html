@@ -5,48 +5,67 @@
     <div class="row">
         <div class="col-md-12">
             <h2>Transacciones</h2>
-            <table datatable="ng" dt-options="vmT.dtOptions" dt-column-defs="vmT.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th class="fit">Servicio</th>
-                        <th class="fit">Usuario</th>
-                        <th>Endpoint</th>
-                        <th class="fit" style="min-width:150px;">Fecha</th>
-                        <th class="fit">P.V.</th>
-                        <th class="fit">Tipo</th>
-                        <th class="fit">Nº</th>
-                        <th class="fit">Importe</th>
-                        <th class="fit">Fca. Cbte.</th>
-                        <th class="fit">Rto.</th>
-                        <th class="fit">CAE</th>
-                        <th class="fit">CAE Vto.</th>
-                        <th class="not-sortable" style="width:55px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="transaction in transactions" ng-class="{'transaction-danger': transaction.resultado === 'R', 'transaction-success': transaction.resultado === 'A'}">
-                        <td>{{transaction.service}}</td>
-                        <td>{{transaction.username}}</td>
-                        <td>{{transaction.endpoint}}</td>
-                        <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
-                        <td>{{transaction.ptoVta}}</td>
-                        <td>
-                            <div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div>
-                        </td>
-                        <td>{{transaction.cbteNro}}</td>
-                        <td>{{transaction.importe | currency}}</td>
-                        <td>{{transaction.cbteFca | date:"dd/MM/yyyy"}}</td>
-                        <td>{{transaction.resultado}}</td>
-                        <td>{{transaction.cae}}</td>
-                        <td>{{transaction.caeVto | date:"dd/MM/yyyy"}}</td>
-                        <td>
-                            <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)">
-                                <i class="glyphicon glyphicon-eye-open"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table datatable="ng" dt-options="vmT.dtOptions" dt-column-defs="vmT.dtColumnDefs" class="table table-custom table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="fit">Servicio</th>
+                            <th class="fit">Usuario</th>
+                            <th>Endpoint</th>
+                            <th class="fit" style="min-width:150px;">Fecha</th>
+                            <th class="fit">P.V.</th>
+                            <th class="fit">Tipo</th>
+                            <th class="fit" style="min-width:100px;">Nº</th>
+                            <th class="fit">Importe</th>
+                            <th class="fit">Fca. Cbte.</th>
+                            <th class="fit">Rto.</th>
+                            <th class="fit">CAE</th>
+                            <th class="fit">CAE Vto.</th>
+                            <th class="fit not-sortable" style="width:55px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="transaction in transactions" ng-class="{'transaction-danger': transaction.resultado === 'R', 'transaction-success': transaction.resultado === 'A'}">
+                            <td>{{transaction.service}}</td>
+                            <td>{{transaction.username}}</td>
+                            <td>{{transaction.endpoint}}</td>
+                            <td>{{transaction.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
+                            <td>{{transaction.ptoVta}}</td>
+                            <td>
+                                <div uib-tooltip="{{ transaction.cbteDesc }}">{{transaction.cbteTipo}}</div>
+                            </td>
+                            <td>{{transaction.cbteNro}}</td>
+                            <td>{{transaction.importe | currency}}</td>
+                            <td>{{transaction.cbteFca | date:"dd/MM/yyyy"}}</td>
+                            <td>{{transaction.resultado}}</td>
+                            <td>{{transaction.cae}}</td>
+                            <td>{{transaction.caeVto | date:"dd/MM/yyyy"}}</td>
+                            <td>
+                                <button class="btn btn-default pull-right" uib-tooltip="Ver detalle" ng-click="viewDetail(transaction)">
+                                    <i class="glyphicon glyphicon-eye-open"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Usuario</th>
+                            <th>Endpoint</th>
+                            <th>Fecha</th>
+                            <th>P.V.</th>
+                            <th>Tipo</th>
+                            <th>Nº</th>
+                            <th>Importe</th>
+                            <th>Fca. Cbte.</th>
+                            <th>Rto.</th>
+                            <th>CAE</th>
+                            <th>CAE Vto.</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>
