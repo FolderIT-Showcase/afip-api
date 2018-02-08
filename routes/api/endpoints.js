@@ -518,13 +518,13 @@ class Endpoints {
 			"Importe": impIVA
 		}];
 
-		if (idIVA === 3 && impIVA === 0) {
-			impNeto = 0;
-			impConc = 0;
-			impExento = impTotal;
-			impTrib = 0;
-			alicIva[0].BaseImp = impExento;
-		}
+		// if (idIVA === 3 && impIVA === 0) {
+		// 	impNeto = 0;
+		// 	impConc = 0;
+		// 	impExento = impTotal;
+		// 	impTrib = 0;
+		// 	alicIva[0].BaseImp = impExento;
+		// }
 
 		_.forEach(tributos, (t) => {
 			t.BaseImp = parseFloat(String(t.BaseImp).replace(' ', '').replace(',', '')) || 0;
@@ -574,6 +574,10 @@ class Endpoints {
 				}
 			}
 		};
+
+		if (idIVA === 3) {
+			delete params["FeCAEReq"]["FeDetReq"]["Iva"];
+		}
 
 		if (!tributos.length) {
 			delete params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Tributos"];
