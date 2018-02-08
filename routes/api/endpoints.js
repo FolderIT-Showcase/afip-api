@@ -495,9 +495,9 @@ class Endpoints {
 			porcIVA = parseFloat((impIVA / impNeto * 100).toFixed(2));
 		}
 
-		if (impNeto === 0) {
-			idIVA = 2; // Exento
-		}
+		// if (impNeto === 0) {
+		// 	idIVA = 2; // Exento
+		// }
 
 		if (!idIVA) {
 			// Tolerancia de 0.1 decimales
@@ -521,6 +521,10 @@ class Endpoints {
 			"BaseImp": impNeto,
 			"Importe": impIVA
 		}];
+
+		if (idIVA === 3) {
+			alicIva[0].BaseImp = impTotal;
+		}
 
 		_.forEach(tributos, (t) => {
 			t.BaseImp = parseFloat(String(t.BaseImp).replace(' ', '').replace(',', '')) || 0;
