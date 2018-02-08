@@ -575,7 +575,7 @@ class Endpoints {
 			}
 		};
 
-		if (idIVA === 3) {
+		if (idIVA === 3 && impNeto === 0) {
 			delete params["FeCAEReq"]["FeDetReq"]["FECAEDetRequest"][0]["Iva"];
 		}
 
