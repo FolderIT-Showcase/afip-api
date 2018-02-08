@@ -518,9 +518,9 @@ class Endpoints {
 			"Importe": impIVA
 		}];
 
-		if (idIVA === 3) {
-			delete alicIva[0].BaseImp;
-			delete alicIva[0].Importe;
+		if (idIVA === 3 && impIVA === 0) {
+			alicIva[0].BaseImp = impExento;
+			impExento = impTotal;
 		}
 
 		_.forEach(tributos, (t) => {
