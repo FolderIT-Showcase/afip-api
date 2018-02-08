@@ -519,8 +519,11 @@ class Endpoints {
 		}];
 
 		if (idIVA === 3 && impIVA === 0) {
-			alicIva[0].BaseImp = impExento;
+			impNeto = 0;
+			impConc = 0;
 			impExento = impTotal;
+			impTrib = 0;
+			alicIva[0].BaseImp = impExento;
 		}
 
 		_.forEach(tributos, (t) => {
